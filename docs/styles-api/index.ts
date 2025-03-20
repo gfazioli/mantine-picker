@@ -1,5 +1,5 @@
-import { MarqueeStylesApi } from './Marquee.styles-api';
+import { PickerStylesApi } from './Picker.styles-api';
 
 export const STYLES_API_DATA = {
-  Marquee: MarqueeStylesApi,
+  Picker: PickerStylesApi,
 };

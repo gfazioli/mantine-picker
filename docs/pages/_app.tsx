@@ -1,4 +1,4 @@
-import '@gfazioli/mantine-marquee/styles.css';
+import '@gfazioli/mantine-picker/styles.css';
 
 import { MantineProvider } from '@mantine/core';
 
@@ -30,7 +30,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <MantineProvider theme={theme}>
       <Head>
-        <title>Mantine Marquee</title>
+        <title>Mantine Picker</title>
         <meta
           name="viewport"
           content="minimum-scale=1, initial-scale=1, width=device-width, user-scalable=no"

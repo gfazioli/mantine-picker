@@ -1,8 +1,8 @@
-export { Marquee } from './Marquee';
+export { Picker } from './Picker';
 export type {
-  MarqueeBaseProps,
-  MarqueeCssVariables,
-  MarqueeFactory,
-  MarqueeProps,
-  MarqueeStylesNames,
-} from './Marquee';
+  PickerBaseProps,
+  PickerCssVariables,
+  PickerFactory,
+  PickerProps,
+  PickerStylesNames,
+} from './Picker';

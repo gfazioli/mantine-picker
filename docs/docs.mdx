@@ -3,47 +3,82 @@ import * as demos from './demos';
 
 ## Installation
 
-<InstallScript packages="@gfazioli/mantine-marquee" />
+<InstallScript packages="@gfazioli/mantine-picker" />
 
 After installation import package styles at the root of your application:
 
 ```tsx
-import '@gfazioli/mantine-marquee/styles.css';
+import '@gfazioli/mantine-picker/styles.css';
 ```
 
-You can import styles within a layer `@layer mantine-marquee` by importing `@gfazioli/mantine-marquee/styles.layer.css` file.
+You can import styles within a layer `@layer mantine-picker` by importing `@gfazioli/mantine-picker/styles.layer.css` file.
 
 ```tsx
-import '@gfazioli/mantine-marquee/styles.layer.css';
+import '@gfazioli/mantine-picker/styles.layer.css';
 ```
 
 ## Usage
 
-The `Marquee` component allows you to create a marquee effect with any content.
+The `Picker` component allows you to create a picker effect with any list of items.
+It's inspired by the iOS picker and allows you to create a similar effect with any list of items.
 
-<Demo data={demos.configurator} />
+- You can drag up and down to select the item you want
+- You may also use the mouse wheel to scroll through the items
+- Of course, you can also click on the item to select it
+- Finally, you can use the keyboard to navigate through the items
 
-## Multiple
+<Demo data={demos.pickerConfigurator} />
 
-The `Marquee` component allows you to create a marquee effect with multiple items.
+## onChange
 
-<Demo data={demos.multiple} />
+You can use the `onChange` prop to get the selected item. It is called whenever the selected value changes, allowing you to handle the selection logic in your application. Of course, you can also use the `value` prop to control the selected item.
 
-## Vertical
+<Demo data={demos.pickerOnChange} />
 
-The `Marquee` component allows you to create a marquee effect with multiple items in vertical direction.
+## renderItem
 
-<Demo data={demos.multipleVertical} />
+You can use the `renderItem` prop to customize the rendering of each item. This prop receives the `item` as arguments and should return the JSX to be rendered.
 
+<Demo data={demos.pickerRenderItem} />
 
-## Example: Testimonials
+## Left and Right Sections
 
-Your customers feedback is important to you. Use Marquee to display your testimonials.
+You can use the `leftSection` and `rightSection` props to add custom content to the left and right sides of the picker. This is useful for adding icons, buttons, or any other content you want.
 
-<Demo data={demos.feedbacks} />
+<Demo data={demos.sections} />
 
-## Example: Branding
+As you can see, by using `leftSection` and `rightSection` props you can add any content you want to the left and right sides of the picker. In these cases the sections are fixed and do not scroll with the items. They will also inside the picker.
 
-One of the most common use cases for `Marquee` is to create branding banners.
+Alternatively, you can use a simple `<Group/>` component to add any left (center) and right section you want.
 
-<Demo data={demos.example} />
+<Demo data={demos.group} />
+
+## Styles the Picker
+
+You can change the default styles of the items by using the same props you use in the `<Text/>` component.
+
+<Demo data={demos.styles} />
+
+## readOnly
+
+In addition to the `disabled` prop, you can use the `readOnly` prop to make the picker read-only. This will prevent the user from changing the selected item, but will still allow you to change it programmatically. It can be useful when you want to display the selected item without allowing the user to change it.
+
+<Demo data={demos.counter} />
+
+## Example: Time Picker
+
+The `Picker` component can be used as a Time Picker. You can use the `renderItem` prop to customize the rendering of each item and the `onChange` prop to handle the selection logic. In this example, we will create a simple time picker that allows you to select the hour and minute.
+
+<Demo data={demos.timePicker} />
+
+## Example: Date Picker
+
+The `Picker` component can be used as a Date Picker.
+
+<Demo data={demos.datePicker} />
+
+## Example: Slot Machine
+
+As funny as it may sound, the `Picker` component can be used to create a slot machine effect.
+
+<Demo data={demos.slotMachine} />
