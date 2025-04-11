@@ -1,8 +1,8 @@
 # Mantine Picker Component
 
 
+https://github.com/user-attachments/assets/520e4838-9f2f-4714-9de2-8067c7630d1d
 
-https://github.com/user-attachments/assets/285cdda3-cd62-46a3-b028-816c34217530
 
 
 
