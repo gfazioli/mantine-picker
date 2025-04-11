@@ -18,6 +18,7 @@ export const PickerStylesApi: StylesApiData<PickerFactory> = {
       '--picker-animation-duration': 'Animation speed duration',
       '--picker-animation-easing': 'Animation easing',
       '--picker-perspective': 'Perspective for 3D effect',
+      '--picker-rotate-y': 'Rotation on Y axis',
       '--picker-mask-height': 'Height of the mask',
       '--picker-mask-intensity': 'Intensity of the mask',
     },
