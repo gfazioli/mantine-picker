@@ -392,6 +392,7 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
     rightSection,
     leftSectionWidth,
     rightSectionWidth,
+    rotateY,
 
     size,
     lineClamp,
@@ -1054,7 +1055,6 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
       }
 
       // Prevent default to stop page scrolling
-      e.preventDefault();
       e.stopPropagation();
 
       // Set wheeling state
