@@ -6,9 +6,9 @@ export const ecosystem = [
     newWindow: true,
   },
   {
-    key: 'mantine-picker',
-    title: 'Mantine Picker',
-    href: 'https://gfazioli.github.io/mantine-picker',
+    key: 'mantine-marquee',
+    title: 'Mantine Marquee',
+    href: 'https://gfazioli.github.io/mantine-marquee',
     newWindow: true,
   },
   {
