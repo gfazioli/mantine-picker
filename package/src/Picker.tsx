@@ -578,22 +578,22 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
       // It's shorter to go the other way around
       if (targetIndex > currentDataIndex) {
         return currentRoundedPos - wrapPath;
-      } else {
-        return currentRoundedPos + wrapPath;
       }
+      return currentRoundedPos + wrapPath;
     }
 
     // Direct path is shorter or equal
     if (targetIndex > currentDataIndex) {
       return currentRoundedPos + directPath;
-    } else {
-      return currentRoundedPos - directPath;
     }
+    return currentRoundedPos - directPath;
   };
 
   // Function to animate to a specific position
   const animateToPosition = (targetPosition: number) => {
-    if (targetPosition === currentPosition || isAnimating) return;
+    if (targetPosition === currentPosition || isAnimating) {
+      return;
+    }
 
     // If loop is false, clamp the target position to valid range
     let clampedTargetPosition = targetPosition;
@@ -672,7 +672,9 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
 
   // Function to apply momentum scrolling
   const applyMomentum = () => {
-    if (velocity === 0 || disabled) return;
+    if (velocity === 0 || disabled) {
+      return;
+    }
 
     setIsMomentumScrolling(true);
 
@@ -704,8 +706,12 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
         }
 
         // If we're very close to the edge, just snap to it
-        if (Math.abs(newPos - minPos) < 0.1) newPos = minPos;
-        if (Math.abs(newPos - maxPos) < 0.1) newPos = maxPos;
+        if (Math.abs(newPos - minPos) < 0.1) {
+          newPos = minPos;
+        }
+        if (Math.abs(newPos - maxPos) < 0.1) {
+          newPos = maxPos;
+        }
 
         // If we hit a boundary, reduce velocity more quickly
         if (newPos === minPos || newPos === maxPos) {
@@ -813,7 +819,9 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
   const handleMouseDown = (e: React.MouseEvent) => {
     // Check if interaction is disabled (either by disabled or readOnly prop)
     const isInteractionDisabled = disabled || readOnly;
-    if (isAnimating || isInteractionDisabled || isMomentumScrolling) return;
+    if (isAnimating || isInteractionDisabled || isMomentumScrolling) {
+      return;
+    }
 
     // Cancel any momentum scrolling
     if (momentumAnimationRef.current !== null) {
@@ -834,7 +842,9 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
   const handleTouchStart = (e: React.TouchEvent) => {
     // Check if interaction is disabled (either by disabled or readOnly prop)
     const isInteractionDisabled = disabled || readOnly;
-    if (isAnimating || isInteractionDisabled || isMomentumScrolling) return;
+    if (isAnimating || isInteractionDisabled || isMomentumScrolling) {
+      return;
+    }
 
     // Cancel any momentum scrolling
     if (momentumAnimationRef.current !== null) {
@@ -852,7 +862,9 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
 
   // Function to clamp position when loop is false
   const clampPosition = (position: number): number => {
-    if (loop) return position;
+    if (loop) {
+      return position;
+    }
 
     // Apply resistance when going beyond boundaries
     if (position < 0) {
@@ -869,7 +881,9 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
   const handleMouseMove = (e: MouseEvent) => {
     // Check if interaction is disabled (either by disabled or readOnly prop)
     const isInteractionDisabled = disabled || readOnly;
-    if (!isDragging || isInteractionDisabled) return;
+    if (!isDragging || isInteractionDisabled) {
+      return;
+    }
 
     const currentTime = performance.now();
     const newY = e.clientY;
@@ -907,7 +921,9 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
   const handleTouchMove = (e: TouchEvent) => {
     // Check if interaction is disabled (either by disabled or readOnly prop)
     const isInteractionDisabled = disabled || readOnly;
-    if (!isDragging || isInteractionDisabled) return;
+    if (!isDragging || isInteractionDisabled) {
+      return;
+    }
 
     const currentTime = performance.now();
     const newY = e.touches[0].clientY;
@@ -945,7 +961,9 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
   const handleMouseUp = () => {
     // Check if interaction is disabled (either by disabled or readOnly prop)
     const isInteractionDisabled = disabled || readOnly;
-    if (!isDragging || isInteractionDisabled) return;
+    if (!isDragging || isInteractionDisabled) {
+      return;
+    }
 
     setIsDragging(false);
     setDragOffset(0);
@@ -984,7 +1002,9 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
   const handleTouchEnd = () => {
     // Check if interaction is disabled (either by disabled or readOnly prop)
     const isInteractionDisabled = disabled || readOnly;
-    if (!isDragging || isInteractionDisabled) return;
+    if (!isDragging || isInteractionDisabled) {
+      return;
+    }
 
     setIsDragging(false);
     setDragOffset(0);
@@ -1046,7 +1066,9 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
     (e: React.WheelEvent) => {
       // Check if interaction is disabled (either by disabled or readOnly prop)
       const isInteractionDisabled = disabled || readOnly;
-      if (isAnimating || isInteractionDisabled || isMomentumScrolling) return;
+      if (isAnimating || isInteractionDisabled || isMomentumScrolling) {
+        return;
+      }
 
       // Cancel any momentum scrolling
       if (momentumAnimationRef.current !== null) {
@@ -1074,7 +1096,7 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
           // Apply resistance when going beyond boundaries
           if (newPosition < 0) {
             // Apply resistance when going below 0
-            newPosition = newPosition * 0.3; // Resistance factor
+            newPosition *= 0.3; // Resistance factor
           } else if (newPosition > data.length - 1) {
             // Apply resistance when going beyond the last item
             newPosition = data.length - 1 + (newPosition - (data.length - 1)) * 0.3; // Resistance factor
@@ -1179,7 +1201,9 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
     (e: React.KeyboardEvent) => {
       // Check if interaction is disabled (either by disabled or readOnly prop)
       const isInteractionDisabled = disabled || readOnly;
-      if (isInteractionDisabled) return;
+      if (isInteractionDisabled) {
+        return;
+      }
 
       // Cancel any momentum scrolling
       if (momentumAnimationRef.current !== null) {
@@ -1188,7 +1212,7 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
       }
 
       switch (e.key) {
-        case 'ArrowUp':
+        case 'ArrowUp': {
           e.preventDefault();
           // Calculate new position
           let prevPosition = Math.round(currentPosition) - 1;
@@ -1199,7 +1223,8 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
           // Animate to new position
           animateToPosition(prevPosition);
           break;
-        case 'ArrowDown':
+        }
+        case 'ArrowDown': {
           e.preventDefault();
           // Calculate new position
           let nextPosition = Math.round(currentPosition) + 1;
@@ -1210,6 +1235,7 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
           // Animate to new position
           animateToPosition(nextPosition);
           break;
+        }
         case 'Home':
           e.preventDefault();
           // Go to first item
@@ -1220,7 +1246,7 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
           // Go to last item
           animateToPosition(data.length - 1);
           break;
-        case 'PageUp':
+        case 'PageUp': {
           e.preventDefault();
           // Go up 5 items or to beginning
           let pageUpPosition = Math.round(currentPosition) - 5;
@@ -1231,7 +1257,8 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
           }
           animateToPosition(pageUpPosition);
           break;
-        case 'PageDown':
+        }
+        case 'PageDown': {
           e.preventDefault();
           // Go down 5 items or to end
           let pageDownPosition = Math.round(currentPosition) + 5;
@@ -1242,6 +1269,7 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
           }
           animateToPosition(pageDownPosition);
           break;
+        }
         default:
           break;
       }
@@ -1264,7 +1292,9 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
   const handleItemClick = (clickedIndex: number, virtualIndex: number) => {
     // Check if interaction is disabled (either by disabled or readOnly prop)
     const isInteractionDisabled = disabled || readOnly;
-    if (isDragging || isAnimating || isInteractionDisabled || isMomentumScrolling) return;
+    if (isDragging || isAnimating || isInteractionDisabled || isMomentumScrolling) {
+      return;
+    }
 
     // Cancel any momentum scrolling
     if (momentumAnimationRef.current !== null) {

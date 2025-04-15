@@ -202,15 +202,15 @@ function Demo() {
 
   const [hours24, setHours24] = useState(new Date().getHours().toString());
   const [hours12, setHours12] = useState(
-    initialHour12 < 10 ? \`0$\{initialHour12\}\` : \`$\{initialHour12\}\`
+    initialHour12 < 10 ? \`0$\{initialHour12}\` : \`$\{initialHour12}\`
   );
   const [minutes24, setMinutes24] = useState(new Date().getMinutes());
   const [minutes12, setMinutes12] = useState(new Date().getMinutes());
   const [amPm, setAmPm] = useState(new Date().getHours() >= 12 ? 'pm' : 'am');
 
-  const hours24Data = Array.from({ length: 24 }, (_, i) => (i < 10 ? \`0$\{i\}\` : \`$\{i\}\`));
-  const hours12Data = Array.from({ length: 12 }, (_, i) => (i < 10 ? \`0$\{i\}\` : \`$\{i\}\`));
-  const minutesData = Array.from({ length: 60 }, (_, i) => (i < 10 ? \`0$\{i\}\` : i));
+  const hours24Data = Array.from({ length: 24 }, (_, i) => (i < 10 ? \`0$\{i}\` : \`$\{i}\`));
+  const hours12Data = Array.from({ length: 12 }, (_, i) => (i < 10 ? \`0$\{i}\` : \`$\{i}\`));
+  const minutesData = Array.from({ length: 60 }, (_, i) => (i < 10 ? \`0$\{i}\` : i));
 
   const pickerProps: Omit<PickerProps, 'data'> = {
     w: 50,
@@ -245,7 +245,7 @@ function Demo() {
           />
           <Text>min</Text>
         </Group>
-        <Text>Selected time: {\`$\{hours24\}:$\{minutes24\}\`}</Text>
+        <Text>Selected time: {\`$\{hours24}:$\{minutes24}\`}</Text>
       </Stack>
 
       <Stack align="center" justify="space-between" h={200}>
@@ -274,7 +274,7 @@ function Demo() {
             onChange={setAmPm}
           />
         </Group>
-        <Text>Selected time: {\`$\{hours12\}:$\{minutes12\} $\{amPm\}\`}</Text>
+        <Text>Selected time: {\`$\{hours12}:$\{minutes12} $\{amPm}\`}</Text>
       </Stack>
     </Group>
   );
@@ -343,7 +343,7 @@ import { Picker, PickerProps } from '@gfazioli/mantine-picker';
 import { Group, Stack, Text } from '@mantine/core';
 
 function DatePicker() {
-  const days = Array.from({ length: 31 }, (_, i) => (i < 9 ? \`0$\{i + 1\}\` : \`$\{i + 1\}\`));
+  const days = Array.from({ length: 31 }, (_, i) => (i < 9 ? \`0$\{i + 1}\` : \`$\{i + 1}\`));
   const months = [
     'January',
     'February',
@@ -362,7 +362,7 @@ function DatePicker() {
   const years = Array.from({ length: 61 }, (_, i) => (i + 1970).toString());
 
   const today =
-    (new Date().getDate() as number) < 10 ? \`0$\{new Date().getDate()\}\` : new Date().getDate();
+    (new Date().getDate() as number) < 10 ? \`0$\{new Date().getDate()}\` : new Date().getDate();
 
   const [day, setDay] = useState(today.toString());
   const [month, setMonth] = useState(months[new Date().getMonth()]);
@@ -386,7 +386,7 @@ function DatePicker() {
         <Picker {...pickerProps} w={80} value={month} data={months} onChange={setMonth} />
         <Picker {...pickerProps} w={60} value={year} data={years} rotateY={10} onChange={setYear} />
       </Group>
-      <Text>Selected date: {\`$\{day\} $\{month\} $\{year\}\`\}</Text>
+      <Text>Selected date: {\`$\{day} $\{month} $\{year}\`}</Text>
     </Stack>
   );
 }

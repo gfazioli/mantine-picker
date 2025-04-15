@@ -320,7 +320,7 @@ export function SetValue(props: PickerProps) {
 
 export function RenderItem(props: PickerProps) {
   const [value, setValue] = useState<any>(0);
-  const [data, SelectData] = useData('colors');
+  const [data] = useData('colors');
 
   return (
     <Stack>
@@ -337,7 +337,7 @@ export function RenderItem(props: PickerProps) {
 
 export function RenderItemShadow(props: PickerProps) {
   const [value, setValue] = useState<any>(0);
-  const [data, SelectData] = useData('colors');
+  const [data] = useData('colors');
 
   return (
     <Stack>
