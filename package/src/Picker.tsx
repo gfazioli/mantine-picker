@@ -1061,6 +1061,14 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
     };
   }, [isDragging, lastY, currentPosition, disabled, readOnly, loop, data.length]);
 
+  // Add a function to detect Windows platform
+  const isWindows = useCallback(() => {
+    if (typeof navigator !== 'undefined') {
+      return navigator.userAgent.indexOf('Windows') !== -1;
+    }
+    return false;
+  }, []);
+
   // Handle wheel event
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
@@ -1077,19 +1085,42 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
       }
 
       // Prevent default to stop page scrolling
+      e.preventDefault(); // Add preventDefault to completely stop browser scrolling
       e.stopPropagation();
 
       // Set wheeling state
       setIsWheeling(true);
 
-      // Calculate delta with sensitivity applied
-      const sensitivity = wheelSensitivity || 1;
-      const delta = e.deltaY * sensitivity;
+      // Calculate delta with sensitivity and normalization applied
+      let sensitivity = wheelSensitivity || 1;
+
+      // Get the raw delta value
+      let delta = e.deltaY;
+
+      // Apply specific scaling based on deltaMode
+      if (e.deltaMode === 1) {
+        // Line mode (common in Firefox)
+        delta *= 16; // Approximate pixels per line
+      } else if (e.deltaMode === 2) {
+        // Page mode
+        delta *= 100; // Approximate pixels per page
+      }
+
+      // Apply platform-specific adjustments
+      if (isWindows()) {
+        // On Windows, wheel events with physical mouse wheels are often much larger
+        // We apply a smaller multiplier to make the scrolling more manageable
+        sensitivity *= 0.2;
+      }
+
+      // Apply sensitivity
+      delta *= sensitivity;
 
       // Update position directly for smooth scrolling
       setCurrentPosition((prev) => {
         // Calculate new position (wheel down = move up, wheel up = move down)
-        let newPosition = prev + (delta / (itemHeight || 40)) * 0.05;
+        // Use a smaller multiplier overall for finer control
+        let newPosition = prev + (delta / (itemHeight || 40)) * 0.08;
 
         // Apply clamping if loop is false
         if (!loop) {
@@ -1193,6 +1224,7 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
       onChange,
       wheelSensitivity,
       isMomentumScrolling,
+      isWindows,
     ]
   );
 
