@@ -1,6 +1,6 @@
 # Mantine Picker Component
 
-<img width="2752" height="1536" alt="Gemini_Generated_Image_5lyfvq5lyfvq5lyf" src="https://github.com/user-attachments/assets/29c00f6f-4b55-4ce7-8f5d-226862a6a6ca" />
+<img width="2752" height="1536" alt="Mantine Picker" src="https://github.com/user-attachments/assets/826ce341-e7e9-47c7-b94e-f401d291e967" />
 
 <div align="center">
   
@@ -64,8 +64,6 @@ function Demo() {
   
 [![Star History Chart](https://api.star-history.com/svg?repos=gfazioli/mantine-picker&type=Timeline)](https://www.star-history.com/#gfazioli/mantine-picker&Timeline)
 
----
+</div>
 
 https://github.com/user-attachments/assets/520e4838-9f2f-4714-9de2-8067c7630d1d
-
-</div>
