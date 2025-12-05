@@ -270,9 +270,7 @@ export interface PickerBaseProps<T = string | number> {
 }
 
 export interface PickerProps<T = any>
-  extends BoxProps,
-    PickerBaseProps<T>,
-    StylesApiProps<PickerFactory> {}
+  extends BoxProps, PickerBaseProps<T>, StylesApiProps<PickerFactory> {}
 
 export type PickerFactory = PolymorphicFactory<{
   props: PickerProps;
