@@ -15,19 +15,15 @@
 
 This component is created on top of the [Mantine](https://mantine.dev/) library.
 
-[![Mantine UI Library](https://img.shields.io/badge/-MANTINE_UI_LIBRARY-blue?style=for-the-badge&labelColor=black&logo=mantine
-)](https://mantine.dev/)
+[Mantine Picker](https://gfazioli.github.io/mantine-picker/) is a versatile UI component for building iOS-like wheel pickers in React with Mantine, enabling selection through dragging, mouse wheel, clicking, and keyboard navigation. Developers can fully control state via value and onChange, or render bespoke item content with renderItem (e.g., color swatches, badges). 
 
-It provides the capability to generate a dynamic picker effect, enabling the display of a wide variety of content in a visually engaging manner. This effect can enhance the overall user experience by drawing attention to important information, announcements, or promotions, allowing for a more interactive and captivating presentation.
+The component’s appearance and behavior are highly tunable: itemHeight, visibleItems, cylinderRadius, rotation (rotateY), blur/opacity/scale gradients, mask and highlight, dividers, loop, and animationDuration. Decorative sections (leftSection/rightSection) let you embed icons or labels that remain fixed while the list scrolls, and readOnly mode permits programmatic updates while preventing user changes—handy for counters and clocks.
 
-[![Mantine Extensions](https://img.shields.io/badge/-Watch_the_Video-blue?style=for-the-badge&labelColor=black&logo=youtube
-)](https://www.youtube.com/playlist?list=PL85tTROKkZrWyqCcmNCdWajpx05-cTal4)
-[![Demo and Documentation](https://img.shields.io/badge/-Demo_%26_Documentation-blue?style=for-the-badge&labelColor=black&logo=typescript
-)](https://gfazioli.github.io/mantine-picker/)
-[![Mantine Extensions HUB](https://img.shields.io/badge/-Mantine_Extensions_Hub-blue?style=for-the-badge&labelColor=blue
-)](https://mantine-extensions.vercel.app/)
+Beyond simple lists like cities or months, the Picker supports composite inputs such as time and date pickers by composing multiple instances (hours, minutes, AM/PM; day, month, year) and synchronizing their values. Styling can be adapted with variants, size presets, uppercase transforms, gradients, and custom shadows, and global styles are imported once via the package’s CSS. Altogether, Mantine Picker offers a polished, customizable selection experience that integrates cleanly with Mantine layouts and components for production-ready pickers.
 
-👉 You can find more components on the [Mantine Extensions Hub](https://mantine-extensions.vercel.app/) library.
+> [!note]
+>
+> → [Demo and Documentation](https://gfazioli.github.io/mantine-picker/) → [Youtube Video](https://www.youtube.com/playlist?list=PL85tTROKkZrWyqCcmNCdWajpx05-cTal4) → [More Mantine Components](https://mantine-extensions.vercel.app/)
 
 
 ## Installation
@@ -60,10 +56,9 @@ function Demo() {
 }
 ```
 
-<div align="center">
-  
+---
+https://github.com/user-attachments/assets/520e4838-9f2f-4714-9de2-8067c7630d1d
+
+---  
 [![Star History Chart](https://api.star-history.com/svg?repos=gfazioli/mantine-picker&type=Timeline)](https://www.star-history.com/#gfazioli/mantine-picker&Timeline)
 
-</div>
-
-https://github.com/user-attachments/assets/520e4838-9f2f-4714-9de2-8067c7630d1d
