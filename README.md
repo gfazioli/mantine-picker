@@ -1,6 +1,6 @@
 # Mantine Picker Component
 
-<img width="2752" height="1536" alt="Mantine Picker" src="https://github.com/user-attachments/assets/826ce341-e7e9-47c7-b94e-f401d291e967" />
+<img alt="Mantine Picker" src="https://github.com/gfazioli/mantine-picker/blob/master/logo.png" />
 
 <div align="center">
   
