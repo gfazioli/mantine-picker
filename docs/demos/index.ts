@@ -1,7 +1,10 @@
+export { effect3d } from './Picker.demo.3d';
 export { configurator as pickerConfigurator } from './Picker.demo.configurator';
 export { counter, datePicker, timePicker } from './Picker.demo.examples';
+export { mask } from './Picker.demo.mask';
 export { onChange as pickerOnChange } from './Picker.demo.onChange';
 export { renderItem as pickerRenderItem } from './Picker.demo.renderItem';
 export { group, sections } from './Picker.demo.sections';
 export { slotMachine } from './Picker.demo.slotMachine';
 export { styles } from './Picker.demo.styles';
+export { visualEffects } from './Picker.demo.visualEffects';

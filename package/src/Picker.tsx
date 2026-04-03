@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMergedRef } from '@mantine/hooks';
 import {
   Box,
@@ -458,11 +458,10 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
 
   // State for tracking drag
   const [isDragging, setIsDragging] = useState(false);
-  const [lastY, setLastY] = useState(0);
-  const [dragOffset, setDragOffset] = useState(0);
+  const lastYRef = useRef(0);
+  const velocityRef = useRef(0);
 
   // State for tracking momentum
-  const [velocity, setVelocity] = useState(0);
   const [isMomentumScrolling, setIsMomentumScrolling] = useState(false);
   const lastMoveTime = useRef<number>(0);
   const lastMovePosition = useRef<number>(0);
@@ -475,6 +474,8 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
 
   // State for the current position (can be fractional during drag)
   const [currentPosition, setCurrentPosition] = useState(selectedIndex);
+  const currentPositionRef = useRef(currentPosition);
+  currentPositionRef.current = currentPosition;
 
   // State for animation
   const [isAnimating, setIsAnimating] = useState(false);
@@ -485,6 +486,12 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
 
   // Track previous loop value
   const prevLoopRef = useRef(loop);
+
+  // Save original body overflow for proper restoration (fix #1)
+  const originalOverflowRef = useRef<string | null>(null);
+
+  // Platform detection (computed once)
+  const isWindows = typeof navigator !== 'undefined' && navigator.userAgent.includes('Windows');
 
   // Handle external value changes
   useEffect(() => {
@@ -590,98 +597,106 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
     return currentRoundedPos - directPath;
   };
 
-  // Function to animate to a specific position
-  const animateToPosition = (targetPosition: number) => {
-    if (targetPosition === currentPosition || isAnimating) {
-      return;
-    }
-
-    // If loop is false, clamp the target position to valid range
-    let clampedTargetPosition = targetPosition;
-    if (!loop) {
-      clampedTargetPosition = Math.max(0, Math.min(data.length - 1, targetPosition));
-    }
-
-    // Cancel any ongoing animation
-    if (animationRef.current !== null) {
-      cancelAnimationFrame(animationRef.current);
-    }
-
-    // Cancel any momentum scrolling
-    if (momentumAnimationRef.current !== null) {
-      cancelAnimationFrame(momentumAnimationRef.current);
-      setIsMomentumScrolling(false);
-    }
-
-    // Set animation state
-    setIsAnimating(true);
-
-    const startTime = performance.now();
-    const startPosition = currentPosition;
-    const distance = Math.abs(clampedTargetPosition - startPosition);
-
-    // Adjust duration based on distance - much shorter for small distances
-    const duration = Math.min(
-      animationDuration || 300,
-      Math.max(100, (animationDuration || 300) * Math.min(distance / 3, 1))
-    );
-
-    // Animation function
-    const animate = (time: number) => {
-      const elapsed = time - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      // Use easeOutQuad for smoother, less bouncy animation
-      const easeProgress = 1 - (1 - progress) * (1 - progress);
-
-      // Calculate the current position
-      const position = startPosition + (clampedTargetPosition - startPosition) * easeProgress;
-
-      // Update the current position for rendering
-      setCurrentPosition(position);
-
-      if (progress < 1) {
-        animationRef.current = requestAnimationFrame(animate);
-      } else {
-        // Animation complete
-        setIsAnimating(false);
-        animationRef.current = null;
-
-        // Set exactly to the target position to avoid floating point issues
-        setCurrentPosition(clampedTargetPosition);
-
-        // Call onChange with the new value if not disabled
-        if (!disabled) {
-          // Always use the real data index for the onChange callback
-          const realIndex = loop
-            ? ((Math.round(clampedTargetPosition) % data.length) + data.length) % data.length
-            : Math.round(clampedTargetPosition);
-          onChange?.(data[realIndex]);
-        }
-
-        // Store the real data value
+  // Snap to nearest item and notify via onChange (must be before animateToPosition)
+  const snapAndNotify = useCallback(
+    (roundedPosition: number) => {
+      if (!disabled) {
         const realIndex = loop
-          ? ((Math.round(clampedTargetPosition) % data.length) + data.length) % data.length
-          : Math.round(clampedTargetPosition);
-        prevValueRef.current = data[realIndex];
+          ? ((roundedPosition % data.length) + data.length) % data.length
+          : roundedPosition;
+        onChange?.(data[realIndex]);
       }
-    };
+      const realIndex = loop
+        ? ((roundedPosition % data.length) + data.length) % data.length
+        : roundedPosition;
+      prevValueRef.current = data[realIndex];
+    },
+    [disabled, loop, data, onChange]
+  );
 
-    // Start animation
-    animationRef.current = requestAnimationFrame(animate);
-  };
+  // Function to animate to a specific position
+  const animateToPosition = useCallback(
+    (targetPosition: number) => {
+      if (targetPosition === currentPositionRef.current || isAnimating) {
+        return;
+      }
+
+      // If loop is false, clamp the target position to valid range
+      let clampedTargetPosition = targetPosition;
+      if (!loop) {
+        clampedTargetPosition = Math.max(0, Math.min(data.length - 1, targetPosition));
+      }
+
+      // Cancel any ongoing animation
+      if (animationRef.current !== null) {
+        cancelAnimationFrame(animationRef.current);
+      }
+
+      // Cancel any momentum scrolling
+      if (momentumAnimationRef.current !== null) {
+        cancelAnimationFrame(momentumAnimationRef.current);
+        setIsMomentumScrolling(false);
+      }
+
+      // Set animation state
+      setIsAnimating(true);
+
+      const startTime = performance.now();
+      const startPosition = currentPositionRef.current;
+      const distance = Math.abs(clampedTargetPosition - startPosition);
+
+      // Adjust duration based on distance - much shorter for small distances
+      const duration = Math.min(
+        animationDuration || 300,
+        Math.max(100, (animationDuration || 300) * Math.min(distance / 3, 1))
+      );
+
+      // Animation function
+      const animate = (time: number) => {
+        const elapsed = time - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // Use easeOutQuad for smoother, less bouncy animation
+        const easeProgress = 1 - (1 - progress) * (1 - progress);
+
+        // Calculate the current position
+        const position = startPosition + (clampedTargetPosition - startPosition) * easeProgress;
+
+        // Update the current position for rendering
+        setCurrentPosition(position);
+
+        if (progress < 1) {
+          animationRef.current = requestAnimationFrame(animate);
+        } else {
+          // Animation complete
+          setIsAnimating(false);
+          animationRef.current = null;
+
+          // Set exactly to the target position to avoid floating point issues
+          setCurrentPosition(clampedTargetPosition);
+
+          // Notify via onChange
+          snapAndNotify(Math.round(clampedTargetPosition));
+        }
+      };
+
+      // Start animation
+      animationRef.current = requestAnimationFrame(animate);
+    },
+    [isAnimating, loop, data.length, animationDuration, snapAndNotify]
+  );
 
   // Function to apply momentum scrolling
-  const applyMomentum = () => {
-    if (velocity === 0 || disabled) {
+  const applyMomentum = useCallback(() => {
+    if (velocityRef.current === 0 || disabled) {
       return;
     }
 
     setIsMomentumScrolling(true);
 
     // Apply the momentum factor to the initial velocity
-    let currentVelocity = velocity * (momentum || 0.95);
-    let currentPos = currentPosition;
+    let currentVelocity = velocityRef.current * (momentum || 0.95);
+    let currentPos = currentPositionRef.current;
     let lastDirection = Math.sign(currentVelocity);
 
     const momentumScroll = () => {
@@ -751,17 +766,7 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
 
         // Update the DOM before calling onChange
         requestAnimationFrame(() => {
-          // Call onChange with the new value if not disabled
-          if (!disabled) {
-            const realIndex = loop
-              ? ((roundedPosition % data.length) + data.length) % data.length
-              : roundedPosition;
-            onChange?.(data[realIndex]);
-          }
-          const realIndex = loop
-            ? ((roundedPosition % data.length) + data.length) % data.length
-            : roundedPosition;
-          prevValueRef.current = data[realIndex];
+          snapAndNotify(roundedPosition);
         });
       }
 
@@ -771,7 +776,7 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
 
     // Start momentum scrolling
     momentumAnimationRef.current = requestAnimationFrame(momentumScroll);
-  };
+  }, [disabled, momentum, decelerationRate, loop, data.length, snapAndNotify]);
 
   // Clean up animation on unmount
   useEffect(() => {
@@ -788,27 +793,33 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
     };
   }, []);
 
-  // Handle mouse enter to disable page scrolling
+  // Handle mouse enter to disable page scrolling (saves original value)
   const handleMouseEnter = () => {
-    // Check if interaction is disabled (either by disabled or readOnly prop)
     const isInteractionDisabled = disabled || readOnly;
     if (preventPageScroll && !isInteractionDisabled && typeof document !== 'undefined') {
+      originalOverflowRef.current = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
     }
   };
 
-  // Handle mouse leave to restore page scrolling
+  // Handle mouse leave to restore page scrolling (restores original value)
   const handleMouseLeave = () => {
     if (preventPageScroll && typeof document !== 'undefined') {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = originalOverflowRef.current ?? '';
+      originalOverflowRef.current = null;
     }
   };
 
   // Ensure overflow is restored on unmount
   useEffect(() => {
     return () => {
-      if (preventPageScroll && typeof document !== 'undefined') {
-        document.body.style.overflow = 'auto';
+      if (
+        preventPageScroll &&
+        typeof document !== 'undefined' &&
+        originalOverflowRef.current !== null
+      ) {
+        document.body.style.overflow = originalOverflowRef.current;
+        originalOverflowRef.current = null;
       }
     };
   }, [preventPageScroll]);
@@ -816,9 +827,8 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
   // Calculate the visible items
   const halfVisible = Math.floor((visibleItems || 5) / 2);
 
-  // Handle mouse down event
-  const handleMouseDown = (e: React.MouseEvent) => {
-    // Check if interaction is disabled (either by disabled or readOnly prop)
+  // Shared drag start logic
+  const startDrag = (clientY: number) => {
     const isInteractionDisabled = disabled || readOnly;
     if (isAnimating || isInteractionDisabled || isMomentumScrolling) {
       return;
@@ -830,250 +840,154 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
       setIsMomentumScrolling(false);
     }
 
-    e.preventDefault();
     setIsDragging(true);
-    setLastY(e.clientY);
-    setDragOffset(0);
-    setVelocity(0);
+    lastYRef.current = clientY;
+    velocityRef.current = 0;
     lastMoveTime.current = performance.now();
     lastMovePosition.current = currentPosition;
+  };
+
+  // Handle mouse down event
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    startDrag(e.clientY);
   };
 
   // Handle touch start event
   const handleTouchStart = (e: React.TouchEvent) => {
-    // Check if interaction is disabled (either by disabled or readOnly prop)
-    const isInteractionDisabled = disabled || readOnly;
-    if (isAnimating || isInteractionDisabled || isMomentumScrolling) {
-      return;
-    }
-
-    // Cancel any momentum scrolling
-    if (momentumAnimationRef.current !== null) {
-      cancelAnimationFrame(momentumAnimationRef.current);
-      setIsMomentumScrolling(false);
-    }
-
-    setIsDragging(true);
-    setLastY(e.touches[0].clientY);
-    setDragOffset(0);
-    setVelocity(0);
-    lastMoveTime.current = performance.now();
-    lastMovePosition.current = currentPosition;
+    startDrag(e.touches[0].clientY);
   };
 
   // Function to clamp position when loop is false
-  const clampPosition = (position: number): number => {
-    if (loop) {
+  const clampPosition = useCallback(
+    (position: number): number => {
+      if (loop) {
+        return position;
+      }
+
+      if (position < 0) {
+        return position * 0.3;
+      } else if (position > data.length - 1) {
+        return data.length - 1 + (position - (data.length - 1)) * 0.3;
+      }
       return position;
-    }
+    },
+    [loop, data.length]
+  );
 
-    // Apply resistance when going beyond boundaries
-    if (position < 0) {
-      // Apply resistance when going below 0
-      return position * 0.3; // Resistance factor
-    } else if (position > data.length - 1) {
-      // Apply resistance when going beyond the last item
-      return data.length - 1 + (position - (data.length - 1)) * 0.3; // Resistance factor
-    }
-    return position;
-  };
-
-  // Handle mouse move event
-  const handleMouseMove = (e: MouseEvent) => {
-    // Check if interaction is disabled (either by disabled or readOnly prop)
-    const isInteractionDisabled = disabled || readOnly;
-    if (!isDragging || isInteractionDisabled) {
-      return;
-    }
-
-    const currentTime = performance.now();
-    const newY = e.clientY;
-    const deltaY = newY - lastY;
-    const timeDelta = currentTime - lastMoveTime.current;
-
-    // Calculate the drag offset in terms of items
-    const itemOffsetRatio = deltaY / (itemHeight || 40);
-
-    // Update the current position directly for smooth movement
-    setCurrentPosition((prev) => {
-      // Calculate new position
-      let newPosition = prev - itemOffsetRatio;
-
-      // Apply clamping if loop is false
-      newPosition = clampPosition(newPosition);
-
-      // Calculate velocity for momentum
-      if (timeDelta > 0) {
-        const positionDelta = newPosition - lastMovePosition.current;
-        setVelocity((positionDelta / timeDelta) * 16); // Scale to roughly 60fps
+  // Shared drag move logic (fix #4: eliminates mouse/touch duplication)
+  const handleDragMove = useCallback(
+    (clientY: number) => {
+      const isInteractionDisabled = disabled || readOnly;
+      if (!isDragging || isInteractionDisabled) {
+        return;
       }
 
-      lastMovePosition.current = newPosition;
-      lastMoveTime.current = currentTime;
+      const currentTime = performance.now();
+      const deltaY = clientY - lastYRef.current;
+      const timeDelta = currentTime - lastMoveTime.current;
 
-      return newPosition;
-    });
+      const itemOffsetRatio = deltaY / (itemHeight || 40);
 
-    // Reset last position for next move
-    setLastY(newY);
-  };
+      setCurrentPosition((prev) => {
+        let newPosition = prev - itemOffsetRatio;
+        newPosition = clampPosition(newPosition);
 
-  // Handle touch move event
-  const handleTouchMove = (e: TouchEvent) => {
-    // Check if interaction is disabled (either by disabled or readOnly prop)
-    const isInteractionDisabled = disabled || readOnly;
-    if (!isDragging || isInteractionDisabled) {
-      return;
-    }
+        if (timeDelta > 0) {
+          const positionDelta = newPosition - lastMovePosition.current;
+          velocityRef.current = (positionDelta / timeDelta) * 16;
+        }
 
-    const currentTime = performance.now();
-    const newY = e.touches[0].clientY;
-    const deltaY = newY - lastY;
-    const timeDelta = currentTime - lastMoveTime.current;
+        lastMovePosition.current = newPosition;
+        lastMoveTime.current = currentTime;
 
-    // Calculate the drag offset in terms of items
-    const itemOffsetRatio = deltaY / (itemHeight || 40);
+        return newPosition;
+      });
 
-    // Update the current position directly for smooth movement
-    setCurrentPosition((prev) => {
-      // Calculate new position
-      let newPosition = prev - itemOffsetRatio;
+      lastYRef.current = clientY;
+    },
+    [isDragging, disabled, readOnly, itemHeight, clampPosition]
+  );
 
-      // Apply clamping if loop is false
-      newPosition = clampPosition(newPosition);
-
-      // Calculate velocity for momentum
-      if (timeDelta > 0) {
-        const positionDelta = newPosition - lastMovePosition.current;
-        setVelocity((positionDelta / timeDelta) * 16); // Scale to roughly 60fps
-      }
-
-      lastMovePosition.current = newPosition;
-      lastMoveTime.current = currentTime;
-
-      return newPosition;
-    });
-
-    // Reset last position for next move
-    setLastY(newY);
-  };
-
-  // Handle mouse up event
-  const handleMouseUp = () => {
-    // Check if interaction is disabled (either by disabled or readOnly prop)
+  // Shared drag end logic (fix #3: eliminates mouse/touch duplication)
+  const handleDragEnd = useCallback(() => {
     const isInteractionDisabled = disabled || readOnly;
     if (!isDragging || isInteractionDisabled) {
       return;
     }
 
     setIsDragging(false);
-    setDragOffset(0);
 
-    // Apply momentum if velocity is significant
-    if (Math.abs(velocity) > 0.05) {
+    if (Math.abs(velocityRef.current) > 0.05) {
       applyMomentum();
     } else {
-      // Otherwise snap to the nearest item
-      let roundedPosition = Math.round(currentPosition);
+      let roundedPosition = Math.round(currentPositionRef.current);
 
-      // If loop is false, clamp the position
       if (!loop) {
         roundedPosition = Math.max(0, Math.min(data.length - 1, roundedPosition));
       }
 
-      if (roundedPosition !== currentPosition) {
+      if (roundedPosition !== currentPositionRef.current) {
         animateToPosition(roundedPosition);
       } else {
-        // Call onChange with the new value if not disabled
-        if (!disabled) {
-          const realIndex = loop
-            ? ((roundedPosition % data.length) + data.length) % data.length
-            : roundedPosition;
-          onChange?.(data[realIndex]);
-        }
-        const realIndex = loop
-          ? ((roundedPosition % data.length) + data.length) % data.length
-          : roundedPosition;
-        prevValueRef.current = data[realIndex];
+        snapAndNotify(roundedPosition);
       }
     }
-  };
-
-  // Handle touch end event
-  const handleTouchEnd = () => {
-    // Check if interaction is disabled (either by disabled or readOnly prop)
-    const isInteractionDisabled = disabled || readOnly;
-    if (!isDragging || isInteractionDisabled) {
-      return;
-    }
-
-    setIsDragging(false);
-    setDragOffset(0);
-
-    // Apply momentum if velocity is significant
-    if (Math.abs(velocity) > 0.05) {
-      applyMomentum();
-    } else {
-      // Otherwise snap to the nearest item
-      let roundedPosition = Math.round(currentPosition);
-
-      // If loop is false, clamp the position
-      if (!loop) {
-        roundedPosition = Math.max(0, Math.min(data.length - 1, roundedPosition));
-      }
-
-      if (roundedPosition !== currentPosition) {
-        animateToPosition(roundedPosition);
-      } else {
-        // Call onChange with the new value if not disabled
-        if (!disabled) {
-          const realIndex = loop
-            ? ((roundedPosition % data.length) + data.length) % data.length
-            : roundedPosition;
-          onChange?.(data[realIndex]);
-        }
-        const realIndex = loop
-          ? ((roundedPosition % data.length) + data.length) % data.length
-          : roundedPosition;
-        prevValueRef.current = data[realIndex];
-      }
-    }
-  };
+  }, [
+    isDragging,
+    disabled,
+    readOnly,
+    loop,
+    data.length,
+    applyMomentum,
+    animateToPosition,
+    snapAndNotify,
+  ]);
 
   // Add and remove event listeners
   useEffect(() => {
-    const handleGlobalMouseMove = (e: MouseEvent) => handleMouseMove(e);
-    const handleGlobalMouseUp = () => handleMouseUp();
-    const handleGlobalTouchMove = (e: TouchEvent) => handleTouchMove(e);
-    const handleGlobalTouchEnd = () => handleTouchEnd();
+    const onMouseMove = (e: MouseEvent) => handleDragMove(e.clientY);
+    const onMouseUp = () => handleDragEnd();
+    const onTouchMove = (e: TouchEvent) => handleDragMove(e.touches[0].clientY);
+    const onTouchEnd = () => handleDragEnd();
 
     if (isDragging) {
-      window.addEventListener('mousemove', handleGlobalMouseMove, { passive: false });
-      window.addEventListener('mouseup', handleGlobalMouseUp);
-      window.addEventListener('touchmove', handleGlobalTouchMove, { passive: false });
-      window.addEventListener('touchend', handleGlobalTouchEnd);
+      window.addEventListener('mousemove', onMouseMove, { passive: false });
+      window.addEventListener('mouseup', onMouseUp);
+      window.addEventListener('touchmove', onTouchMove, { passive: false });
+      window.addEventListener('touchend', onTouchEnd);
     }
 
     return () => {
-      window.removeEventListener('mousemove', handleGlobalMouseMove);
-      window.removeEventListener('mouseup', handleGlobalMouseUp);
-      window.removeEventListener('touchmove', handleGlobalTouchMove);
-      window.removeEventListener('touchend', handleGlobalTouchEnd);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
     };
-  }, [isDragging, lastY, currentPosition, disabled, readOnly, loop, data.length]);
+  }, [isDragging, handleDragMove, handleDragEnd]);
 
-  // Add a function to detect Windows platform
-  const isWindows = useCallback(() => {
-    if (typeof navigator !== 'undefined') {
-      return navigator.userAgent.indexOf('Windows') !== -1;
+  // Shared wheel-end snap logic (uses ref to avoid stale closure — fix #2)
+  const wheelSnapToNearest = useCallback(() => {
+    setIsWheeling(false);
+
+    let roundedPosition = Math.round(currentPositionRef.current);
+
+    if (!loop) {
+      roundedPosition = Math.max(0, Math.min(data.length - 1, roundedPosition));
     }
-    return false;
-  }, []);
+
+    if (roundedPosition !== currentPositionRef.current) {
+      animateToPosition(roundedPosition);
+    } else {
+      snapAndNotify(roundedPosition);
+    }
+
+    wheelTimeoutRef.current = null;
+  }, [loop, data.length, snapAndNotify, animateToPosition]);
 
   // Handle wheel event
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
-      // Check if interaction is disabled (either by disabled or readOnly prop)
       const isInteractionDisabled = disabled || readOnly;
       if (isAnimating || isInteractionDisabled || isMomentumScrolling) {
         return;
@@ -1085,147 +999,73 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
         setIsMomentumScrolling(false);
       }
 
-      // Prevent default to stop page scrolling
-      e.preventDefault(); // Add preventDefault to completely stop browser scrolling
+      e.preventDefault();
       e.stopPropagation();
 
-      // Set wheeling state
       setIsWheeling(true);
 
-      // Calculate delta with sensitivity and normalization applied
       let sensitivity = wheelSensitivity || 1;
-
-      // Get the raw delta value
       let delta = e.deltaY;
 
-      // Apply specific scaling based on deltaMode
+      // Normalize deltaMode (Firefox line mode, page mode)
       if (e.deltaMode === 1) {
-        // Line mode (common in Firefox)
-        delta *= 16; // Approximate pixels per line
+        delta *= 16;
       } else if (e.deltaMode === 2) {
-        // Page mode
-        delta *= 100; // Approximate pixels per page
+        delta *= 100;
       }
 
-      // Apply platform-specific adjustments
-      if (isWindows()) {
-        // On Windows, wheel events with physical mouse wheels are often much larger
-        // We apply a smaller multiplier to make the scrolling more manageable
+      // Windows mouse wheels produce larger deltas
+      if (isWindows) {
         sensitivity *= 0.2;
       }
 
-      // Apply sensitivity
       delta *= sensitivity;
 
       // Update position directly for smooth scrolling
       setCurrentPosition((prev) => {
-        // Calculate new position (wheel down = move up, wheel up = move down)
-        // Use a smaller multiplier overall for finer control
         let newPosition = prev + (delta / (itemHeight || 40)) * 0.08;
 
-        // Apply clamping if loop is false
         if (!loop) {
-          // Apply resistance when going beyond boundaries
           if (newPosition < 0) {
-            // Apply resistance when going below 0
-            newPosition *= 0.3; // Resistance factor
+            newPosition *= 0.3;
           } else if (newPosition > data.length - 1) {
-            // Apply resistance when going beyond the last item
-            newPosition = data.length - 1 + (newPosition - (data.length - 1)) * 0.3; // Resistance factor
+            newPosition = data.length - 1 + (newPosition - (data.length - 1)) * 0.3;
           }
         }
 
         return newPosition;
       });
 
-      // Set timeout to end wheeling state
+      // Debounce wheel end detection
       if (wheelTimeoutRef.current) {
         clearTimeout(wheelTimeoutRef.current);
       }
 
-      // Store timestamp of last wheel event
       lastWheelEventTime.current = Date.now();
 
-      // Set timeout to end wheeling state after a short period
       wheelTimeoutRef.current = setTimeout(() => {
-        // Check if enough time has passed since last wheel event
         if (Date.now() - lastWheelEventTime.current >= 150) {
-          setIsWheeling(false);
-
-          // Snap to nearest item
-          let roundedPosition = Math.round(currentPosition);
-
-          // If loop is false, clamp the position
-          if (!loop) {
-            roundedPosition = Math.max(0, Math.min(data.length - 1, roundedPosition));
-          }
-
-          if (roundedPosition !== currentPosition) {
-            animateToPosition(roundedPosition);
-          } else {
-            // Call onChange with the new value if not disabled
-            if (!disabled) {
-              const realIndex = loop
-                ? ((roundedPosition % data.length) + data.length) % data.length
-                : roundedPosition;
-              onChange?.(data[realIndex]);
-            }
-            const realIndex = loop
-              ? ((roundedPosition % data.length) + data.length) % data.length
-              : roundedPosition;
-            prevValueRef.current = data[realIndex];
-          }
-
-          wheelTimeoutRef.current = null;
+          wheelSnapToNearest();
         } else {
-          // If little time has passed, try again later
+          // Retry after another 150ms
           if (wheelTimeoutRef.current) {
             clearTimeout(wheelTimeoutRef.current);
           }
-          wheelTimeoutRef.current = setTimeout(() => {
-            setIsWheeling(false);
-
-            // Snap to nearest item
-            let roundedPosition = Math.round(currentPosition);
-
-            // If loop is false, clamp the position
-            if (!loop) {
-              roundedPosition = Math.max(0, Math.min(data.length - 1, roundedPosition));
-            }
-
-            if (roundedPosition !== currentPosition) {
-              animateToPosition(roundedPosition);
-            } else {
-              // Call onChange with the new value if not disabled
-              if (!disabled) {
-                const realIndex = loop
-                  ? ((roundedPosition % data.length) + data.length) % data.length
-                  : roundedPosition;
-                onChange?.(data[realIndex]);
-              }
-              const realIndex = loop
-                ? ((roundedPosition % data.length) + data.length) % data.length
-                : roundedPosition;
-              prevValueRef.current = data[realIndex];
-            }
-
-            wheelTimeoutRef.current = null;
-          }, 150);
+          wheelTimeoutRef.current = setTimeout(wheelSnapToNearest, 150);
         }
       }, 150);
     },
     [
-      currentPosition,
       data,
       loop,
       isAnimating,
       disabled,
       readOnly,
       itemHeight,
-      onChange,
       wheelSensitivity,
       isMomentumScrolling,
       isWindows,
+      wheelSnapToNearest,
     ]
   );
 
@@ -1307,7 +1147,7 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
           break;
       }
     },
-    [currentPosition, data.length, loop, disabled, readOnly, isMomentumScrolling]
+    [currentPosition, data.length, loop, disabled, readOnly, animateToPosition]
   );
 
   // Handle focus
@@ -1348,47 +1188,33 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
     animateToPosition(currentRoundedPos + directVisualPath);
 
     // Use the real data index for the onChange callback
-    if (!disabled) {
-      onChange?.(data[clickedIndex]);
-    }
-    prevValueRef.current = data[clickedIndex];
+    snapAndNotify(clickedIndex);
   };
 
-  // Create a continuous array of indices for smooth looping
-  const createContinuousIndices = () => {
+  // Memoized continuous indices for smooth looping (fix #8: avoid allocation every render)
+  const flooredPosition = Math.floor(currentPosition);
+  const continuousIndices = useMemo(() => {
     if (!loop || data.length <= 1) {
       return Array.from({ length: data.length }, (_, i) => ({ dataIndex: i, virtualIndex: i }));
     }
 
-    // Calculate how many duplicates we need on each side
-    const duplicatesPerSide = Math.max(
-      // At least visibleItems * 2 to ensure we have enough items on both sides
-      (visibleItems || 5) * 2,
-      // Or data.length * 2 to ensure we have enough duplicates for large datasets
-      data.length * 2
-    );
+    const duplicatesPerSide = Math.max((visibleItems || 5) * 2, data.length * 2);
+    const indices = [];
 
-    const continuousIndices = [];
+    const startIndex = flooredPosition - duplicatesPerSide;
+    const endIndex = flooredPosition + duplicatesPerSide;
 
-    // Create a continuous range of indices centered around the current position
-    const startIndex = Math.floor(currentPosition) - duplicatesPerSide;
-    const endIndex = Math.floor(currentPosition) + duplicatesPerSide;
-
-    // Add all indices in the range
     for (let i = startIndex; i <= endIndex; i++) {
       const dataIndex = ((i % data.length) + data.length) % data.length;
-      continuousIndices.push({ dataIndex, virtualIndex: i });
+      indices.push({ dataIndex, virtualIndex: i });
     }
 
-    return continuousIndices;
-  };
+    return indices;
+  }, [loop, data.length, visibleItems, flooredPosition]);
 
   // Render the items with enhanced handling for loop transitions and 3D effect
   const renderItems = () => {
     const items = [];
-
-    // Create a continuous array of indices for smooth looping
-    const continuousIndices = createContinuousIndices();
 
     // Calculate the range of indices to render
     // We use exactly the number of visible items specified, plus a small buffer for smooth scrolling
@@ -1405,7 +1231,7 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
       // Only render items in the visible range
       if (Math.abs(relativePos) <= visibleRange) {
         // Calculate the position of the item
-        const itemOffset = relativePos * (itemHeight || 40) + dragOffset;
+        const itemOffset = relativePos * (itemHeight || 40);
 
         // Calculate the distance from the center
         const distanceFromCenter = Math.abs(relativePos);
