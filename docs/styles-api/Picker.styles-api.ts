@@ -26,5 +26,10 @@ export const PickerStylesApi: StylesApiData<PickerFactory> = {
     // container: null,
   },
 
-  //modifiers: [{ selector: 'root' }],
+  modifiers: [
+    { modifier: 'data-disabled', selector: 'root', condition: '`disabled` prop is `true`' },
+    { modifier: 'data-readonly', selector: 'root', condition: '`readOnly` prop is `true`' },
+    { modifier: 'data-3d', selector: 'root', condition: '`enable3D` prop is `true`' },
+    { modifier: 'data-focused', selector: 'root', condition: 'Picker has focus' },
+  ],
 };

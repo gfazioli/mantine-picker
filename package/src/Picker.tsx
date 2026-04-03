@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useMergedRef } from '@mantine/hooks';
 import {
   Box,
   createVarsResolver,
@@ -349,8 +350,9 @@ const varsResolver = createVarsResolver<PickerFactory>(
  *
  * A component that replicates the iOS picker with smooth scrolling, 3D rotation effect, and animations.
  */
-export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
-  const props = useProps('Picker', defaultProps, _props);
+export const Picker = polymorphicFactory<PickerFactory>((_props) => {
+  const { ref, ...restProps } = _props as typeof _props & { ref?: React.Ref<HTMLDivElement> };
+  const props = useProps('Picker', defaultProps, restProps);
 
   const {
     data,
@@ -452,6 +454,7 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
   // Reference to the container element
   const containerRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const mergedRootRef = useMergedRef(ref as React.Ref<HTMLDivElement>, rootRef);
 
   // State for tracking drag
   const [isDragging, setIsDragging] = useState(false);
@@ -1517,15 +1520,7 @@ export const Picker = polymorphicFactory<PickerFactory>((_props, ref) => {
 
   return (
     <Box
-      ref={(node) => {
-        // Handle both refs
-        if (typeof ref === 'function') {
-          ref(node);
-        } else if (ref) {
-          ref.current = node;
-        }
-        rootRef.current = node;
-      }}
+      ref={mergedRootRef}
       {...getStyles('root', {
         style: {
           perspective: enable3D ? `${perspective}px` : undefined,
