@@ -600,15 +600,15 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
   // Snap to nearest item and notify via onChange (must be before animateToPosition)
   const snapAndNotify = useCallback(
     (roundedPosition: number) => {
-      if (!disabled) {
-        const realIndex = loop
-          ? ((roundedPosition % data.length) + data.length) % data.length
-          : roundedPosition;
-        onChange?.(data[realIndex]);
+      if (data.length === 0) {
+        return;
       }
       const realIndex = loop
         ? ((roundedPosition % data.length) + data.length) % data.length
-        : roundedPosition;
+        : Math.max(0, Math.min(data.length - 1, roundedPosition));
+      if (!disabled) {
+        onChange?.(data[realIndex]);
+      }
       prevValueRef.current = data[realIndex];
     },
     [disabled, loop, data, onChange]
@@ -802,10 +802,14 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
     }
   };
 
-  // Handle mouse leave to restore page scrolling (restores original value)
+  // Handle mouse leave to restore page scrolling (only if we modified it)
   const handleMouseLeave = () => {
-    if (preventPageScroll && typeof document !== 'undefined') {
-      document.body.style.overflow = originalOverflowRef.current ?? '';
+    if (
+      preventPageScroll &&
+      typeof document !== 'undefined' &&
+      originalOverflowRef.current !== null
+    ) {
+      document.body.style.overflow = originalOverflowRef.current;
       originalOverflowRef.current = null;
     }
   };
@@ -987,7 +991,7 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
 
   // Handle wheel event
   const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
+    (e: WheelEvent) => {
       const isInteractionDisabled = disabled || readOnly;
       if (isAnimating || isInteractionDisabled || isMomentumScrolling) {
         return;
@@ -1068,6 +1072,19 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
       wheelSnapToNearest,
     ]
   );
+
+  // Register wheel listener as native event with { passive: false } to allow preventDefault
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || disabled || readOnly) {
+      return;
+    }
+
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      el.removeEventListener('wheel', handleWheel);
+    };
+  }, [handleWheel, disabled, readOnly]);
 
   // Handle key down event
   const handleKeyDown = useCallback(
@@ -1398,7 +1415,6 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
           className={classes.container}
           onMouseDown={disabled || readOnly ? undefined : handleMouseDown}
           onTouchStart={disabled || readOnly ? undefined : handleTouchStart}
-          onWheel={disabled || readOnly ? undefined : handleWheel}
           onKeyDown={disabled || readOnly ? undefined : handleKeyDown}
           onFocus={handleFocus}
           onBlur={handleBlur}
