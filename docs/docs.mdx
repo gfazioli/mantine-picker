@@ -41,6 +41,32 @@ You can use the `renderItem` prop to customize the rendering of each item. This 
 
 <Demo data={demos.pickerRenderItem} />
 
+## 3D Effect
+
+The Picker features a built-in 3D cylinder rotation effect inspired by the iOS picker. Configure it with:
+- `enable3D` — toggle the 3D effect (default: `true`)
+- `perspective` — depth perspective in pixels (default: `300`)
+- `maxRotation` — maximum rotation angle in degrees (default: `60`)
+- `cylinderRadius` — curvature factor (default: `4`)
+- `rotateY` — rotate the entire picker along the Y-axis (default: `0`)
+
+<Demo data={demos.effect3d} />
+
+## Visual Effects
+
+Non-selected items can be styled with gradual blur, opacity, and scale effects:
+- `maxBlurAmount` — maximum blur in pixels for non-selected items (default: `0`)
+- `minItemOpacity` — minimum opacity at the edges (default: `0.3`)
+- `minItemScale` — minimum scale at the edges (default: `0.85`)
+
+<Demo data={demos.visualEffects} />
+
+## Mask
+
+Enable a gradient mask at the top and bottom edges with `withMask`. Control the gradient intensity with `maskHeight` (percentage of picker height) and `maskIntensity` (gradient opacity).
+
+<Demo data={demos.mask} />
+
 ## Left and Right Sections
 
 You can use the `leftSection` and `rightSection` props to add custom content to the left and right sides of the picker. This is useful for adding icons, buttons, or any other content you want.
@@ -64,6 +90,19 @@ You can change the default styles of the items by using the same props you use i
 In addition to the `disabled` prop, you can use the `readOnly` prop to make the picker read-only. This will prevent the user from changing the selected item, but will still allow you to change it programmatically. It can be useful when you want to display the selected item without allowing the user to change it.
 
 <Demo data={demos.counter} />
+
+## Accessibility
+
+The Picker component provides built-in keyboard navigation and screen reader support:
+
+- **Arrow Up/Down** — move one item up/down
+- **Home/End** — jump to first/last item
+- **Page Up/Down** — move 5 items at a time
+- `role="listbox"` and `role="option"` for semantic structure
+- `aria-selected` on the active item
+- `aria-disabled` and `aria-readonly` when applicable
+
+Use the `id`, `label`, `description`, and `keyboardHint` props to provide additional context for assistive technologies. Set `focusable={false}` to exclude the picker from the tab order.
 
 ## Example: Time Picker
 
