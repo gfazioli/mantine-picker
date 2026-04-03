@@ -18,12 +18,24 @@
 ## Overview
 
 This component is created on top of the [Mantine](https://mantine.dev/) library.
+It requires **Mantine 9.x** and **React 19**.
 
-[Mantine Picker](https://gfazioli.github.io/mantine-picker/) is a versatile UI component for building iOS-like wheel pickers in React with Mantine, enabling selection through dragging, mouse wheel, clicking, and keyboard navigation. Developers can fully control state via value and onChange, or render bespoke item content with renderItem (e.g., color swatches, badges). 
+[Mantine Picker](https://gfazioli.github.io/mantine-picker/) is an iOS-style wheel picker for React with Mantine, enabling selection through dragging, mouse wheel, clicking, and keyboard navigation.
 
-The component’s appearance and behavior are highly tunable: itemHeight, visibleItems, cylinderRadius, rotation (rotateY), blur/opacity/scale gradients, mask and highlight, dividers, loop, and animationDuration. Decorative sections (leftSection/rightSection) let you embed icons or labels that remain fixed while the list scrolls, and readOnly mode permits programmatic updates while preventing user changes—handy for counters and clocks.
+## Features
 
-Beyond simple lists like cities or months, the Picker supports composite inputs such as time and date pickers by composing multiple instances (hours, minutes, AM/PM; day, month, year) and synchronizing their values. Styling can be adapted with variants, size presets, uppercase transforms, gradients, and custom shadows, and global styles are imported once via the package’s CSS. Altogether, Mantine Picker offers a polished, customizable selection experience that integrates cleanly with Mantine layouts and components for production-ready pickers.
+- 🎡 **iOS-style wheel picker**: Smooth drag, wheel, click, and keyboard navigation
+- 🎲 **3D rotation effect**: Configurable `perspective`, `maxRotation`, `cylinderRadius`, `rotateY`
+- 🔄 **Loop mode**: Infinite circular scrolling through items
+- 🎯 **Momentum scrolling**: Inertia-based deceleration after drag release
+- 🎨 **Custom item rendering**: `renderItem` for color swatches, badges, icons, or any React content
+- 📐 **Left/Right sections**: Fixed content beside the picker (icons, labels)
+- 🔒 **Read-only mode**: Programmatic updates without user interaction (counters, clocks)
+- 🎭 **Visual effects**: Configurable blur, opacity, scale gradients for non-selected items
+- 🖌 **Mask, highlight, dividers**: Toggle gradient mask, selection highlight, and divider lines
+- ♿ **Accessible**: `aria-label`, keyboard navigation, `focusable` prop, screen reader support
+- 🎨 **Styles API**: Full Mantine Styles API support with 6 selectors
+- 📦 **TypeScript**: Full type safety with generic `Picker<T>` support
 
 > [!note]
 >

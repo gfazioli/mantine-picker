@@ -151,7 +151,7 @@ function useData(initialType: PickerDataType) {
   };
 
   React.useEffect(() => {
-    setData(availableTypes[type]);
+    setData(availableTypes[type as keyof typeof availableTypes]);
   }, [type]);
 
   return [data, SelectData] as const;
