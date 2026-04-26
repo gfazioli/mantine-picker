@@ -130,8 +130,20 @@ The `Picker` component can be used as a Date Picker.
 
 <Demo data={demos.datePicker} />
 
+## Example: Color Palette
+
+`renderItem` can return any JSX, so a colour swatch next to the label is a one-liner. The selected colour is mirrored back to a preview block to make the picker feel like a proper colour control.
+
+<Demo data={demos.pickerColorPalette} />
+
+## Example: Alarm clock
+
+A small iOS-style alarm clock combining three pickers (hours, minutes, AM/PM), `hapticFeedback` on every wheel tick, and a final vibration burst when the alarm is armed.
+
+<Demo data={demos.pickerAlarm} />
+
 ## Example: Slot Machine
 
-As funny as it may sound, the `Picker` component can be used to create a slot machine effect.
+As funny as it may sound, the `Picker` component can be used to create a slot machine effect — three reels spin at different speeds, stop sequentially, and emit a tactile pulse on every reel landing (and a longer pattern on a jackpot).
 
 <Demo data={demos.slotMachine} />

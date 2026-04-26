@@ -1,4 +1,6 @@
 export { effect3d } from './Picker.demo.3d';
+export { alarm as pickerAlarm } from './Picker.demo.alarm';
+export { colorPalette as pickerColorPalette } from './Picker.demo.colorPalette';
 export { configurator as pickerConfigurator } from './Picker.demo.configurator';
 export { counter, datePicker, timePicker } from './Picker.demo.examples';
 export { haptic as pickerHaptic } from './Picker.demo.haptic';
