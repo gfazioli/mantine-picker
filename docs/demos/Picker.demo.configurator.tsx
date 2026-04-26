@@ -1,10 +1,10 @@
-import { useState } from 'react';
 import { Picker, type PickerProps } from '@gfazioli/mantine-picker';
 import { Code, Stack } from '@mantine/core';
 import { MantineDemo } from '@mantinex/demo';
+import { useState } from 'react';
 
 function Demo(props: PickerProps) {
-  const [value, setValue] = useState('Rome');
+  const [value, setValue] = useState<string | number>('Rome');
 
   return (
     <Stack align="center" justify="space-between" h={300}>
@@ -36,7 +36,7 @@ import { Picker, type PickerProps } from '@gfazioli/mantine-picker';
 import { Code, Stack } from '@mantine/core';
 
 function Demo(props: PickerProps) {
-  const [value, setValue] = useState('Rome');
+  const [value, setValue] = useState<string | number>('Rome');
 
   return (
     <Stack align="center" justify="space-between" h={300}>

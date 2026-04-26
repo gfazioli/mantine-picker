@@ -1,5 +1,5 @@
-import React from 'react';
 import { render } from '@mantine-tests/core';
+import React from 'react';
 import { Picker } from './Picker';
 
 const sampleData = ['Apple', 'Banana', 'Cherry', 'Date', 'Elderberry'];
@@ -160,6 +160,26 @@ describe('Picker', () => {
 
       expect(container.querySelector('[role="listbox"]')).toBeTruthy();
       expect(container).toHaveTextContent('Cherry');
+    });
+  });
+
+  describe('uncontrolled mode (#16)', () => {
+    const selectedText = (container: HTMLElement) =>
+      container.querySelector('[data-selected]')?.textContent;
+
+    it('renders the defaultValue as initial selection', () => {
+      const { container } = render(<Picker data={sampleData} defaultValue="Cherry" />);
+      expect(selectedText(container)).toBe('Cherry');
+    });
+
+    it('controlled value takes precedence over defaultValue', () => {
+      const { container } = render(<Picker data={sampleData} value="Date" defaultValue="Cherry" />);
+      expect(selectedText(container)).toBe('Date');
+    });
+
+    it('falls back to data[0] when neither value nor defaultValue is provided', () => {
+      const { container } = render(<Picker data={sampleData} />);
+      expect(selectedText(container)).toBe('Apple');
     });
   });
 

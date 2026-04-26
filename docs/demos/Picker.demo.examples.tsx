@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { Picker, PickerProps } from '@gfazioli/mantine-picker';
 import { Button, Group, Stack, Text } from '@mantine/core';
 import { useInterval } from '@mantine/hooks';
 import { MantineDemo } from '@mantinex/demo';
+import { useState } from 'react';
 
 function Demo() {
   const length = 10;
@@ -111,13 +111,13 @@ export const counter: MantineDemo = {
 function TimePicker() {
   const initialHour12 = +(new Date().getHours() as number) % 12;
 
-  const [hours24, setHours24] = useState(new Date().getHours().toString());
-  const [hours12, setHours12] = useState(
+  const [hours24, setHours24] = useState<string | number>(new Date().getHours().toString());
+  const [hours12, setHours12] = useState<string | number>(
     initialHour12 < 10 ? `0${initialHour12}` : `${initialHour12}`
   );
-  const [minutes24, setMinutes24] = useState(new Date().getMinutes());
-  const [minutes12, setMinutes12] = useState(new Date().getMinutes());
-  const [amPm, setAmPm] = useState(new Date().getHours() >= 12 ? 'pm' : 'am');
+  const [minutes24, setMinutes24] = useState<string | number>(new Date().getMinutes());
+  const [minutes12, setMinutes12] = useState<string | number>(new Date().getMinutes());
+  const [amPm, setAmPm] = useState<string | number>(new Date().getHours() >= 12 ? 'pm' : 'am');
 
   const hours24Data = Array.from({ length: 24 }, (_, i) => (i < 10 ? `0${i}` : `${i}`));
   const hours12Data = Array.from({ length: 12 }, (_, i) => (i < 10 ? `0${i}` : `${i}`));
@@ -310,9 +310,9 @@ function DatePicker() {
   const today =
     (new Date().getDate() as number) < 10 ? `0${new Date().getDate()}` : new Date().getDate();
 
-  const [day, setDay] = useState(today.toString());
-  const [month, setMonth] = useState(months[new Date().getMonth()]);
-  const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [day, setDay] = useState<string | number>(today.toString());
+  const [month, setMonth] = useState<string | number>(months[new Date().getMonth()]);
+  const [year, setYear] = useState<string | number>(new Date().getFullYear().toString());
 
   const pickerProps: Omit<PickerProps, 'data'> = {
     withDividers: false,
@@ -364,9 +364,9 @@ function DatePicker() {
   const today =
     (new Date().getDate() as number) < 10 ? \`0$\{new Date().getDate()}\` : new Date().getDate();
 
-  const [day, setDay] = useState(today.toString());
-  const [month, setMonth] = useState(months[new Date().getMonth()]);
-  const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [day, setDay] = useState<string | number>(today.toString());
+  const [month, setMonth] = useState<string | number>(months[new Date().getMonth()]);
+  const [year, setYear] = useState<string | number>(new Date().getFullYear().toString());
 
   const pickerProps: Omit<PickerProps, 'data'> = {
     withDividers: false,
