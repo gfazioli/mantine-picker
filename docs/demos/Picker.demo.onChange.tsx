@@ -1,10 +1,10 @@
-import { useState } from 'react';
 import { Picker } from '@gfazioli/mantine-picker';
 import { Code, Select, Stack } from '@mantine/core';
 import { MantineDemo } from '@mantinex/demo';
+import { useState } from 'react';
 
 function Demo() {
-  const [value, setValue] = useState<string | null>(
+  const [value, setValue] = useState<string | number | null>(
     new Date().toLocaleString('en-US', { month: 'long' })
   );
   const data = [
@@ -24,7 +24,7 @@ function Demo() {
 
   return (
     <Stack align="center" justify="space-between" h={400}>
-      <Picker onChange={setValue} value={value} data={data} />
+      <Picker onChange={setValue} value={value ?? undefined} data={data} />
       <Code>Value: {value}</Code>
       <Select data={data} label="Select value" placeholder="Select value" onChange={setValue} />
     </Stack>
@@ -37,7 +37,7 @@ import { Picker } from '@gfazioli/mantine-picker';
 import { Code, Select, Stack } from '@mantine/core';
 
 function Demo() {
-  const [value, setValue] = useState<string | null>(
+  const [value, setValue] = useState<string | number | null>(
     new Date().toLocaleString('en-US', { month: 'long' })
   );
   const data = [
@@ -57,7 +57,7 @@ function Demo() {
 
   return (
     <Stack align="center" justify="space-between" h={400}>
-      <Picker onChange={setValue} value={value} data={data} />
+      <Picker onChange={setValue} value={value ?? undefined} data={data} />
       <Code>Value: {value}</Code>
       <Select data={data} label="Select value" placeholder="Select value" onChange={setValue} />
     </Stack>

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
 import { Badge, Button, Group, Paper, SegmentedControl, Select, Stack, Text } from '@mantine/core';
+import React, { useEffect, useState } from 'react';
 import { Picker, PickerProps } from './Picker';
 
 export default {
@@ -249,8 +249,8 @@ export function LeftSection(props: PickerProps) {
 
 export function Time(props: PickerProps) {
   // set the current date
-  const [hours, setHours] = useState(new Date().getHours().toString());
-  const [minutes, setMinutes] = useState(new Date().getMinutes());
+  const [hours, setHours] = useState<string | number>(new Date().getHours().toString());
+  const [minutes, setMinutes] = useState<string | number>(new Date().getMinutes());
 
   const hoursData = Array.from({ length: 24 }, (_, i) => (i < 10 ? `0${i}` : `${i}`));
   const minutesData = Array.from({ length: 60 }, (_, i) => (i < 10 ? `0${i}` : i));
@@ -328,7 +328,7 @@ export function RenderItem(props: PickerProps) {
         {...props}
         data={data}
         onChange={setValue}
-        renderItem={(item) => <Badge color={item}>{item}</Badge>}
+        renderItem={(item) => <Badge color={String(item)}>{item}</Badge>}
       />
       <Text>Selected value: {value}</Text>
     </Stack>
@@ -347,7 +347,7 @@ export function RenderItemShadow(props: PickerProps) {
         onChange={setValue}
         renderItem={(item) => (
           <>
-            <Badge color={item}>{item}</Badge>
+            <Badge color={String(item)}>{item}</Badge>
             <Badge
               color="black"
               style={{

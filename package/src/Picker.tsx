@@ -1,5 +1,3 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useMergedRef } from '@mantine/hooks';
 import {
   Box,
   createVarsResolver,
@@ -14,6 +12,8 @@ import {
   type StylesApiProps,
   type TextProps,
 } from '@mantine/core';
+import { useMergedRef, useUncontrolled } from '@mantine/hooks';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import classes from './Picker.module.css';
 
 export type PickerStylesNames = 'root' | 'container' | 'item' | 'mask' | 'highlight' | 'dividers';
@@ -39,12 +39,17 @@ export interface PickerBaseProps<T = string | number> {
   data: T[];
 
   /**
-   * Currently selected value
+   * Currently selected value (controlled mode)
    */
   value?: T;
 
   /**
-   * Callback function called when value changes
+   * Initial selected value for uncontrolled mode. Ignored when `value` is provided.
+   */
+  defaultValue?: T;
+
+  /**
+   * Callback function called when value changes (called in both controlled and uncontrolled mode)
    */
   onChange?: (value: T) => void;
 
@@ -270,7 +275,7 @@ export interface PickerBaseProps<T = string | number> {
   rotateY?: number;
 }
 
-export interface PickerProps<T = any>
+export interface PickerProps<T = string | number>
   extends BoxProps, PickerBaseProps<T>, StylesApiProps<PickerFactory> {}
 
 export type PickerFactory = PolymorphicFactory<{
@@ -357,6 +362,7 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
   const {
     data,
     value,
+    defaultValue,
     onChange,
     animate,
     animationDuration,
@@ -447,9 +453,20 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
     varsResolver,
   });
 
+  // Bridge controlled and uncontrolled modes. handleChange always notifies the
+  // consumer-supplied onChange and updates internal state when uncontrolled.
+  // useUncontrolled is called with a loose type because the polymorphicFactory
+  // erases the generic from the function body.
+  const [_value, handleChange] = useUncontrolled<any>({
+    value,
+    defaultValue,
+    finalValue: undefined,
+    onChange,
+  });
+
   // Find the index of the selected value
-  const selectedIndex = value !== undefined ? data.indexOf(value) : 0;
-  const prevValueRef = useRef<typeof value>(value);
+  const selectedIndex = _value !== undefined ? data.indexOf(_value) : 0;
+  const prevValueRef = useRef<typeof _value>(_value);
 
   // Reference to the container element
   const containerRef = useRef<HTMLDivElement>(null);
@@ -538,7 +555,9 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
     [loop, data.length, visibleItems]
   );
 
-  // Snap to nearest item and notify via onChange (must be before animateToPosition)
+  // Snap to nearest item and notify via handleChange (must be before animateToPosition).
+  // handleChange routes through useUncontrolled, so it both updates internal state in
+  // uncontrolled mode and forwards to consumer onChange in either mode.
   const snapAndNotify = useCallback(
     (roundedPosition: number) => {
       if (data.length === 0) {
@@ -548,11 +567,11 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
         ? ((roundedPosition % data.length) + data.length) % data.length
         : Math.max(0, Math.min(data.length - 1, roundedPosition));
       if (!disabled) {
-        onChange?.(data[realIndex]);
+        handleChange(data[realIndex]);
       }
       prevValueRef.current = data[realIndex];
     },
-    [disabled, loop, data, onChange]
+    [disabled, loop, data, handleChange]
   );
 
   // Function to animate to a specific position
@@ -627,18 +646,18 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
     [isAnimating, loop, data.length, animationDuration, snapAndNotify]
   );
 
-  // Handle external value changes
+  // Handle external value changes (controlled) or initial defaultValue (uncontrolled)
   useEffect(() => {
-    if (value !== prevValueRef.current && selectedIndex !== -1) {
+    if (_value !== prevValueRef.current && selectedIndex !== -1) {
       if (animate) {
         const targetPosition = findBestPathToValue(selectedIndex);
         animateToPosition(targetPosition);
       } else {
         setCurrentPosition(selectedIndex);
       }
-      prevValueRef.current = value;
+      prevValueRef.current = _value;
     }
-  }, [value, selectedIndex, animate, findBestPathToValue, animateToPosition]);
+  }, [_value, selectedIndex, animate, findBestPathToValue, animateToPosition]);
 
   // Handle loop property changes
   // Reads currentPositionRef.current to avoid stale closure and to keep this effect
@@ -669,14 +688,14 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
       }
 
       const realIndex = Math.round(clampedPosition);
-      if (realIndex >= 0 && realIndex < data.length && value !== data[realIndex]) {
-        onChange?.(data[realIndex]);
+      if (realIndex >= 0 && realIndex < data.length && _value !== data[realIndex]) {
+        handleChange(data[realIndex]);
       }
     }
 
     setIsDragging(false);
     prevLoopRef.current = loop;
-  }, [loop, onChange, value, data]);
+  }, [loop, handleChange, _value, data]);
 
   // Function to apply momentum scrolling
   const applyMomentum = useCallback(() => {
