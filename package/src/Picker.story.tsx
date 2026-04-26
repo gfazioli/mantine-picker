@@ -82,6 +82,51 @@ export default {
 
 type PickerDataType = 'tens' | 'hundreds' | 'months' | 'cities' | 'colors' | 'fonts' | 'sizes';
 
+const availableTypes = {
+  tens: Array.from({ length: 10 }, (_, i) => i),
+  hundreds: Array.from({ length: 100 }, (_, i) => i),
+  months: [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ],
+  cities: [
+    'New York',
+    'Los Angeles',
+    'Chicago',
+    'Houston',
+    'Phoenix',
+    'Philadelphia',
+    'San Antonio',
+    'San Diego',
+    'Dallas',
+    'San Jose',
+  ],
+  colors: ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink', 'teal'],
+  fonts: [
+    'Arial',
+    'Verdana',
+    'Helvetica',
+    'Times New Roman',
+    'Courier New',
+    'Georgia',
+    'Trebuchet MS',
+    'Impact',
+    'Comic Sans MS',
+    'Lucida Console',
+  ],
+  sizes: ['12px', '14px', '16px', '18px', '20px', '22px', '24px', '26px', '28px', '30px', '32px'],
+};
+
 function useData(initialType: PickerDataType) {
   const [type, setType] = useState<PickerDataType | string>(initialType);
 
@@ -104,51 +149,6 @@ function useData(initialType: PickerDataType) {
       />
     );
   }
-
-  const availableTypes = {
-    tens: Array.from({ length: 10 }, (_, i) => i),
-    hundreds: Array.from({ length: 100 }, (_, i) => i),
-    months: [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ],
-    cities: [
-      'New York',
-      'Los Angeles',
-      'Chicago',
-      'Houston',
-      'Phoenix',
-      'Philadelphia',
-      'San Antonio',
-      'San Diego',
-      'Dallas',
-      'San Jose',
-    ],
-    colors: ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink', 'teal'],
-    fonts: [
-      'Arial',
-      'Verdana',
-      'Helvetica',
-      'Times New Roman',
-      'Courier New',
-      'Georgia',
-      'Trebuchet MS',
-      'Impact',
-      'Comic Sans MS',
-      'Lucida Console',
-    ],
-    sizes: ['12px', '14px', '16px', '18px', '20px', '22px', '24px', '26px', '28px', '30px', '32px'],
-  };
 
   React.useEffect(() => {
     setData(availableTypes[type as keyof typeof availableTypes]);
