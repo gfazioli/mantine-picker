@@ -29,11 +29,13 @@ It's inspired by the iOS picker and allows you to create a similar effect with a
 
 <Demo data={demos.pickerConfigurator} />
 
-## onChange
+## Controlled
 
-You can use the `onChange` prop to get the selected item. It is called whenever the selected value changes, allowing you to handle the selection logic in your application. Of course, you can also use the `value` prop to control the selected item.
+Pass both `value` and `onChange` to use the `Picker` in controlled mode. The selected item is fully owned by your state, and the picker mirrors any external value change (e.g. from a `Select` or another input bound to the same state).
 
 <Demo data={demos.pickerOnChange} />
+
+By default the `Picker` is uncontrolled — omit `value`/`onChange` and optionally set `defaultValue` to choose the initial item. `onChange` is still called on every change if you provide it.
 
 ## renderItem
 
