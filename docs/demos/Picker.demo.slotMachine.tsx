@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { Picker } from '@gfazioli/mantine-picker';
 import { Button, Group, Paper, Stack, Text } from '@mantine/core';
 import { MantineDemo } from '@mantinex/demo';
+import { useState } from 'react';
 
 function SlotMachine() {
   const slotMachineData = [

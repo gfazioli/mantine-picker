@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { Picker } from '@gfazioli/mantine-picker';
 import { Badge, Code, ColorSwatch, Group, Stack, Text } from '@mantine/core';
 import { MantineDemo } from '@mantinex/demo';
+import { useState } from 'react';
 
 function Demo() {
   const [value, setValue] = useState<string | number>('');
