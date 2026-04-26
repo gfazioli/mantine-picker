@@ -54,6 +54,16 @@ export interface PickerBaseProps<T = string | number> {
   onChange?: (value: T) => void;
 
   /**
+   * Called when any scroll interaction begins: drag, mouse wheel, keyboard nav, or programmatic animation.
+   */
+  onScrollStart?: () => void;
+
+  /**
+   * Called when all scroll interactions have settled: momentum ends, animation completes, or the wheel debounce expires.
+   */
+  onScrollEnd?: () => void;
+
+  /**
    * Whether to animate the scroll to the selected value on mount
    * @default true
    */
@@ -364,6 +374,8 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
     value,
     defaultValue,
     onChange,
+    onScrollStart,
+    onScrollEnd,
     animate,
     animationDuration,
     easingFunction,
@@ -497,6 +509,20 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
   // State for animation
   const [isAnimating, setIsAnimating] = useState(false);
   const animationRef = useRef<number | null>(null);
+
+  // Notify consumers about transitions between idle and any kind of scroll activity.
+  // The four boolean states (drag, momentum, wheel, animate) are unioned so a single
+  // continuous interaction (e.g. drag → momentum) only fires onScrollStart/onScrollEnd once.
+  const isScrolling = isDragging || isMomentumScrolling || isWheeling || isAnimating;
+  const wasScrollingRef = useRef(false);
+  useEffect(() => {
+    if (isScrolling && !wasScrollingRef.current) {
+      onScrollStart?.();
+    } else if (!isScrolling && wasScrollingRef.current) {
+      onScrollEnd?.();
+    }
+    wasScrollingRef.current = isScrolling;
+  }, [isScrolling, onScrollStart, onScrollEnd]);
 
   // State for focus
   const [isFocused, setIsFocused] = useState(false);

@@ -163,6 +163,50 @@ describe('Picker', () => {
     });
   });
 
+  describe('scroll lifecycle callbacks (#15)', () => {
+    it('does not fire onScrollStart or onScrollEnd on initial mount (idle state)', () => {
+      const onScrollStart = jest.fn();
+      const onScrollEnd = jest.fn();
+      render(
+        <Picker
+          data={sampleData}
+          value="Cherry"
+          onScrollStart={onScrollStart}
+          onScrollEnd={onScrollEnd}
+        />
+      );
+
+      expect(onScrollStart).not.toHaveBeenCalled();
+      expect(onScrollEnd).not.toHaveBeenCalled();
+    });
+
+    it('accepts the callbacks without crashing across value transitions', () => {
+      const onScrollStart = jest.fn();
+      const onScrollEnd = jest.fn();
+      const { rerender, container } = render(
+        <Picker
+          data={sampleData}
+          value="Apple"
+          animate={false}
+          onScrollStart={onScrollStart}
+          onScrollEnd={onScrollEnd}
+        />
+      );
+
+      rerender(
+        <Picker
+          data={sampleData}
+          value="Date"
+          animate={false}
+          onScrollStart={onScrollStart}
+          onScrollEnd={onScrollEnd}
+        />
+      );
+
+      expect(container.querySelector('[role="listbox"]')).toBeTruthy();
+    });
+  });
+
   describe('uncontrolled mode (#16)', () => {
     const selectedText = (container: HTMLElement) =>
       container.querySelector('[data-selected]')?.textContent;
