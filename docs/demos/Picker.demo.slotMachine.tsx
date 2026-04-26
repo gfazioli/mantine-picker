@@ -39,6 +39,10 @@ function SlotMachine() {
   const [result, setResult] = useState<Result>('idle');
   const intervalsRef = useRef<number[]>([]);
   const timersRef = useRef<number[]>([]);
+  // Mirror values into a ref so the final timeout can score the round without
+  // calling setResult/vibrate inside a setValues updater (which React may run twice).
+  const valuesRef = useRef(values);
+  valuesRef.current = values;
 
   const clearAll = () => {
     intervalsRef.current.forEach((id) => window.clearInterval(id));
@@ -86,14 +90,12 @@ function SlotMachine() {
           timersRef.current.push(
             window.setTimeout(() => {
               setSpinning(false);
-              setValues((prev) => {
-                const isWin = prev.every((v) => v === prev[0]);
-                setResult(isWin ? 'win' : 'lose');
-                if (isWin) {
-                  vibrate([0, 60, 80, 60]);
-                }
-                return prev;
-              });
+              const final = valuesRef.current;
+              const isWin = final.every((v) => v === final[0]);
+              setResult(isWin ? 'win' : 'lose');
+              if (isWin) {
+                vibrate([0, 60, 80, 60]);
+              }
             }, 350)
           );
         }
@@ -159,6 +161,8 @@ function Demo() {
   const [result, setResult] = useState('idle');
   const intervalsRef = useRef([]);
   const timersRef = useRef([]);
+  const valuesRef = useRef(values);
+  valuesRef.current = values;
 
   const clearAll = () => {
     intervalsRef.current.forEach((id) => clearInterval(id));
@@ -201,12 +205,10 @@ function Demo() {
         if (slotIndex === STOP_TIMES.length - 1) {
           setTimeout(() => {
             setSpinning(false);
-            setValues((prev) => {
-              const isWin = prev.every((v) => v === prev[0]);
-              setResult(isWin ? 'win' : 'lose');
-              if (isWin) vibrate([0, 60, 80, 60]);
-              return prev;
-            });
+            const final = valuesRef.current;
+            const isWin = final.every((v) => v === final[0]);
+            setResult(isWin ? 'win' : 'lose');
+            if (isWin) vibrate([0, 60, 80, 60]);
           }, 350);
         }
       }, stopAt);
