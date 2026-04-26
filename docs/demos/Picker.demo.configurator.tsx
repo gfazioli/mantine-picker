@@ -75,6 +75,12 @@ export const configurator: MantineDemo = {
       libraryValue: false,
     },
     {
+      prop: 'hapticFeedback',
+      type: 'boolean',
+      initialValue: false,
+      libraryValue: false,
+    },
+    {
       prop: 'enable3D',
       type: 'boolean',
       initialValue: true,

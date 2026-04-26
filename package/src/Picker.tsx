@@ -64,6 +64,14 @@ export interface PickerBaseProps<T = string | number> {
   onScrollEnd?: () => void;
 
   /**
+   * Trigger a short `navigator.vibrate()` pulse on supported devices whenever the selected item changes,
+   * giving the picker a native iOS/Android feel. Pass `true` for the default 15ms duration, or a number to
+   * set a custom duration in milliseconds. No-op on desktop or unsupported browsers.
+   * @default false
+   */
+  hapticFeedback?: boolean | number;
+
+  /**
    * Whether to animate the scroll to the selected value on mount
    * @default true
    */
@@ -376,6 +384,7 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
     onChange,
     onScrollStart,
     onScrollEnd,
+    hapticFeedback,
     animate,
     animationDuration,
     easingFunction,
@@ -523,6 +532,26 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
     }
     wasScrollingRef.current = isScrolling;
   }, [isScrolling, onScrollStart, onScrollEnd]);
+
+  // Optional haptic feedback on selection change. The first run primes the previous-value
+  // tracker (so initial mount doesn't vibrate); subsequent value changes vibrate when
+  // hapticFeedback is enabled, silently no-ops on devices without navigator.vibrate.
+  const hapticPrevRef = useRef<{ value: typeof _value } | null>(null);
+  useEffect(() => {
+    if (hapticPrevRef.current === null) {
+      hapticPrevRef.current = { value: _value };
+      return;
+    }
+    if (!hapticFeedback || hapticPrevRef.current.value === _value) {
+      hapticPrevRef.current.value = _value;
+      return;
+    }
+    hapticPrevRef.current.value = _value;
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      const duration = typeof hapticFeedback === 'number' ? hapticFeedback : 15;
+      navigator.vibrate(duration);
+    }
+  }, [_value, hapticFeedback]);
 
   // State for focus
   const [isFocused, setIsFocused] = useState(false);
