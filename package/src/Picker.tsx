@@ -485,8 +485,11 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
     onChange,
   });
 
-  // Find the index of the selected value
-  const selectedIndex = _value !== undefined ? data.indexOf(_value) : 0;
+  // Find the index of the selected value, falling back to 0 when the value isn't in
+  // `data` (e.g. an out-of-band defaultValue or a typo) so the wheel always lands on a
+  // real item and the data-selected attribute can be set.
+  const rawSelectedIndex = _value !== undefined ? data.indexOf(_value) : 0;
+  const selectedIndex = rawSelectedIndex >= 0 ? rawSelectedIndex : 0;
   const prevValueRef = useRef<typeof _value>(_value);
 
   // Reference to the container element
