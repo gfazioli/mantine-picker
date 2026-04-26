@@ -37,6 +37,12 @@ Pass both `value` and `onChange` to use the `Picker` in controlled mode. The sel
 
 By default the `Picker` is uncontrolled — omit `value`/`onChange` and optionally set `defaultValue` to choose the initial item. `onChange` is still called on every change if you provide it.
 
+## Scroll lifecycle
+
+Pass `onScrollStart` and `onScrollEnd` to react to interaction boundaries — useful for analytics, haptic feedback, or coordinating multiple pickers in a group. A single continuous interaction (drag → momentum, or wheel + animated snap) only fires the pair once: `onScrollStart` triggers when the picker leaves the idle state, `onScrollEnd` fires when every internal animation, momentum, drag and wheel debounce has settled.
+
+<Demo data={demos.pickerScrollEvents} />
+
 ## renderItem
 
 You can use the `renderItem` prop to customize the rendering of each item. This prop receives the `item` as arguments and should return the JSX to be rendered.
