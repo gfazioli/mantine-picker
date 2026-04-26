@@ -493,109 +493,50 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
   // Platform detection (computed once)
   const isWindows = typeof navigator !== 'undefined' && navigator.userAgent.includes('Windows');
 
-  // Handle external value changes
-  useEffect(() => {
-    if (value !== prevValueRef.current && selectedIndex !== -1) {
-      if (animate) {
-        // Find the best path to the new value
-        const targetPosition = findBestPathToValue(selectedIndex);
-        animateToPosition(targetPosition);
-      } else {
-        setCurrentPosition(selectedIndex);
-      }
-      prevValueRef.current = value;
-    }
-  }, [value, selectedIndex, animate]);
-
-  // Handle loop property changes
-  useEffect(() => {
-    // Check if loop has changed
-    if (prevLoopRef.current !== loop) {
-      // If changing from loop=true to loop=false, ensure position is valid
-      if (!loop) {
-        // Clamp the current position to valid range
-        const clampedPosition = Math.max(0, Math.min(data.length - 1, currentPosition));
-
-        // If position changed, update it
-        if (clampedPosition !== currentPosition) {
-          setCurrentPosition(clampedPosition);
-        }
-
-        // Force a re-render by canceling any animations and resetting states
-        if (animationRef.current !== null) {
-          cancelAnimationFrame(animationRef.current);
-          animationRef.current = null;
-          setIsAnimating(false);
-        }
-
-        if (momentumAnimationRef.current !== null) {
-          cancelAnimationFrame(momentumAnimationRef.current);
-          momentumAnimationRef.current = null;
-          setIsMomentumScrolling(false);
-        }
-
-        // Update the selected value if needed
-        const realIndex = Math.round(clampedPosition);
-        if (realIndex >= 0 && realIndex < data.length && value !== data[realIndex]) {
-          onChange?.(data[realIndex]);
-        }
+  // Find the best (shortest) path to a target index, wrapping around when loop is enabled.
+  // Reads currentPositionRef.current so the callback identity stays stable across position
+  // updates and can safely participate in dependency arrays of effects/handlers.
+  const findBestPathToValue = useCallback(
+    (targetIndex: number) => {
+      if (!loop || data.length <= 1) {
+        return targetIndex;
       }
 
-      // Force a re-render to update the visible items
-      setIsDragging(false);
-
-      // Update the ref for next comparison
-      prevLoopRef.current = loop;
-    }
-  }, [loop, currentPosition, onChange, value, data]);
-
-  // Function to find the best path to a value
-  const findBestPathToValue = (targetIndex: number) => {
-    if (!loop || data.length <= 1) {
-      return targetIndex;
-    }
-
-    // Special handling for small arrays with loop enabled
-    if (data.length <= (visibleItems || 5)) {
-      // Get the current rounded position
-      const currentRoundedPos = Math.round(currentPosition);
-
-      // Calculate the current data index
+      const currentRoundedPos = Math.round(currentPositionRef.current);
       const currentDataIndex = ((currentRoundedPos % data.length) + data.length) % data.length;
 
-      // Calculate the shortest path
-      let directPath = targetIndex - currentDataIndex;
-      if (directPath > data.length / 2) {
-        directPath -= data.length;
-      } else if (directPath < -data.length / 2) {
-        directPath += data.length;
+      // Special handling for small arrays with loop enabled
+      if (data.length <= (visibleItems || 5)) {
+        let directPath = targetIndex - currentDataIndex;
+        if (directPath > data.length / 2) {
+          directPath -= data.length;
+        } else if (directPath < -data.length / 2) {
+          directPath += data.length;
+        }
+
+        return currentRoundedPos + directPath;
       }
 
-      return currentRoundedPos + directPath;
-    }
+      // For larger datasets, use standard shortest path calculation
+      const directPath = Math.abs(targetIndex - currentDataIndex);
+      const wrapPath = data.length - directPath;
 
-    // For larger datasets, use standard shortest path calculation
-    const currentRoundedPos = Math.round(currentPosition);
-    const currentDataIndex = ((currentRoundedPos % data.length) + data.length) % data.length;
+      if (wrapPath < directPath) {
+        // It's shorter to go the other way around
+        if (targetIndex > currentDataIndex) {
+          return currentRoundedPos - wrapPath;
+        }
+        return currentRoundedPos + wrapPath;
+      }
 
-    // Calculate direct and wrap paths
-    const directPath = Math.abs(targetIndex - currentDataIndex);
-    const wrapPath = data.length - directPath;
-
-    if (wrapPath < directPath) {
-      // It's shorter to go the other way around
+      // Direct path is shorter or equal
       if (targetIndex > currentDataIndex) {
-        return currentRoundedPos - wrapPath;
+        return currentRoundedPos + directPath;
       }
-      return currentRoundedPos + wrapPath;
-    }
-
-    // Direct path is shorter or equal
-    if (targetIndex > currentDataIndex) {
-      return currentRoundedPos + directPath;
-    }
-    return currentRoundedPos - directPath;
-  };
+      return currentRoundedPos - directPath;
+    },
+    [loop, data.length, visibleItems]
+  );
 
   // Snap to nearest item and notify via onChange (must be before animateToPosition)
   const snapAndNotify = useCallback(
@@ -685,6 +626,57 @@ export const Picker = polymorphicFactory<PickerFactory>((_props) => {
     },
     [isAnimating, loop, data.length, animationDuration, snapAndNotify]
   );
+
+  // Handle external value changes
+  useEffect(() => {
+    if (value !== prevValueRef.current && selectedIndex !== -1) {
+      if (animate) {
+        const targetPosition = findBestPathToValue(selectedIndex);
+        animateToPosition(targetPosition);
+      } else {
+        setCurrentPosition(selectedIndex);
+      }
+      prevValueRef.current = value;
+    }
+  }, [value, selectedIndex, animate, findBestPathToValue, animateToPosition]);
+
+  // Handle loop property changes
+  // Reads currentPositionRef.current to avoid stale closure and to keep this effect
+  // out of the per-frame render loop (currentPosition updates ~60fps during drag/scroll).
+  useEffect(() => {
+    if (prevLoopRef.current === loop) {
+      return;
+    }
+
+    if (!loop) {
+      const position = currentPositionRef.current;
+      const clampedPosition = Math.max(0, Math.min(data.length - 1, position));
+
+      if (clampedPosition !== position) {
+        setCurrentPosition(clampedPosition);
+      }
+
+      if (animationRef.current !== null) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+        setIsAnimating(false);
+      }
+
+      if (momentumAnimationRef.current !== null) {
+        cancelAnimationFrame(momentumAnimationRef.current);
+        momentumAnimationRef.current = null;
+        setIsMomentumScrolling(false);
+      }
+
+      const realIndex = Math.round(clampedPosition);
+      if (realIndex >= 0 && realIndex < data.length && value !== data[realIndex]) {
+        onChange?.(data[realIndex]);
+      }
+    }
+
+    setIsDragging(false);
+    prevLoopRef.current = loop;
+  }, [loop, onChange, value, data]);
 
   // Function to apply momentum scrolling
   const applyMomentum = useCallback(() => {
