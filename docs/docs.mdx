@@ -43,6 +43,12 @@ Pass `onScrollStart` and `onScrollEnd` to react to interaction boundaries — us
 
 <Demo data={demos.pickerScrollEvents} />
 
+## Haptic feedback
+
+Set `hapticFeedback` to trigger a short `navigator.vibrate()` pulse on supported devices whenever the selected item changes, giving the picker a native iOS/Android feel. Pass `true` to use the default 15ms duration, or a number for a custom duration in milliseconds. Desktop browsers and devices without vibration support silently no-op.
+
+<Demo data={demos.pickerHaptic} />
+
 ## renderItem
 
 You can use the `renderItem` prop to customize the rendering of each item. This prop receives the `item` as arguments and should return the JSX to be rendered.

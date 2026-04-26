@@ -1,4 +1,5 @@
 import { render } from '@mantine-tests/core';
+import { act } from '@testing-library/react';
 import React from 'react';
 import { Picker } from './Picker';
 
@@ -204,6 +205,85 @@ describe('Picker', () => {
       );
 
       expect(container.querySelector('[role="listbox"]')).toBeTruthy();
+    });
+  });
+
+  describe('hapticFeedback (#26)', () => {
+    let vibrate: jest.Mock;
+    const nav = navigator as { vibrate?: unknown };
+    let originalVibrate: unknown;
+
+    beforeEach(() => {
+      originalVibrate = nav.vibrate;
+      vibrate = jest.fn().mockReturnValue(true);
+      nav.vibrate = vibrate;
+    });
+
+    afterEach(() => {
+      if (originalVibrate === undefined) {
+        delete nav.vibrate;
+      } else {
+        nav.vibrate = originalVibrate;
+      }
+    });
+
+    // Wrapper that keeps the Picker mounted across value changes so the internal
+    // ref-based "previous value" tracking persists. Using rerender() with the
+    // mantine-tests render helper resets refs because the wrapper recreates the tree.
+    function HapticHarness({
+      initial,
+      hapticFeedback,
+    }: {
+      initial: string;
+      hapticFeedback?: boolean | number;
+    }) {
+      const [v, setV] = React.useState(initial);
+      return (
+        <>
+          <Picker data={sampleData} value={v} animate={false} hapticFeedback={hapticFeedback} />
+          <button data-testid="change" type="button" onClick={() => setV('Date')} />
+          <button data-testid="change-cherry" type="button" onClick={() => setV('Cherry')} />
+        </>
+      );
+    }
+
+    it('does not vibrate on initial mount', () => {
+      render(<Picker data={sampleData} value="Cherry" hapticFeedback />);
+      expect(vibrate).not.toHaveBeenCalled();
+    });
+
+    it('vibrates with default 15ms when selected value changes', () => {
+      const { getByTestId } = render(<HapticHarness initial="Apple" hapticFeedback />);
+      expect(vibrate).not.toHaveBeenCalled();
+
+      act(() => {
+        getByTestId('change').click();
+      });
+      expect(vibrate).toHaveBeenCalledWith(15);
+    });
+
+    it('vibrates with the provided duration when hapticFeedback is a number', () => {
+      const { getByTestId } = render(<HapticHarness initial="Apple" hapticFeedback={40} />);
+      act(() => {
+        getByTestId('change-cherry').click();
+      });
+      expect(vibrate).toHaveBeenCalledWith(40);
+    });
+
+    it('does not vibrate when hapticFeedback is omitted', () => {
+      const { getByTestId } = render(<HapticHarness initial="Apple" />);
+      act(() => {
+        getByTestId('change').click();
+      });
+      expect(vibrate).not.toHaveBeenCalled();
+    });
+
+    it('does not vibrate when hapticFeedback is false', () => {
+      const { getByTestId } = render(<HapticHarness initial="Apple" hapticFeedback={false} />);
+      act(() => {
+        getByTestId('change').click();
+      });
+      expect(vibrate).not.toHaveBeenCalled();
     });
   });
 

@@ -1,6 +1,7 @@
 export { effect3d } from './Picker.demo.3d';
 export { configurator as pickerConfigurator } from './Picker.demo.configurator';
 export { counter, datePicker, timePicker } from './Picker.demo.examples';
+export { haptic as pickerHaptic } from './Picker.demo.haptic';
 export { mask } from './Picker.demo.mask';
 export { onChange as pickerOnChange } from './Picker.demo.onChange';
 export { renderItem as pickerRenderItem } from './Picker.demo.renderItem';
