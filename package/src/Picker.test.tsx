@@ -116,4 +116,74 @@ describe('Picker', () => {
     const { container } = render(<Picker data={sampleData} />);
     expect(container.querySelector('.mask')).toBeNull();
   });
+
+  // Regression tests for #24 (loop toggle) and #23 (findBestPathToValue useCallback).
+  // The bugs were stale closures inside the loop-change and value-change effects.
+  // These tests exercise both effect paths to lock in the corrected dependency model.
+  describe('loop toggle (#24)', () => {
+    it('does not call onChange spuriously when toggling loop with a valid value', () => {
+      const onChange = jest.fn();
+      const { rerender } = render(
+        <Picker data={sampleData} value="Cherry" loop onChange={onChange} />
+      );
+      onChange.mockClear();
+
+      rerender(<Picker data={sampleData} value="Cherry" loop={false} onChange={onChange} />);
+
+      expect(onChange).not.toHaveBeenCalled();
+    });
+
+    it('preserves the selected value when toggling loop=true → loop=false at index 0', () => {
+      const { rerender, container } = render(<Picker data={sampleData} value="Apple" loop />);
+      rerender(<Picker data={sampleData} value="Apple" loop={false} />);
+
+      expect(container.querySelector('[role="listbox"]')).toBeTruthy();
+      expect(container).toHaveTextContent('Apple');
+    });
+
+    it('preserves the selected value when toggling loop=true → loop=false at last index', () => {
+      const { rerender, container } = render(<Picker data={sampleData} value="Elderberry" loop />);
+      rerender(<Picker data={sampleData} value="Elderberry" loop={false} />);
+
+      expect(container).toHaveTextContent('Elderberry');
+    });
+
+    it('survives multiple loop toggles without crashing', () => {
+      const onChange = jest.fn();
+      const { rerender, container } = render(
+        <Picker data={sampleData} value="Cherry" loop onChange={onChange} />
+      );
+
+      rerender(<Picker data={sampleData} value="Cherry" loop={false} onChange={onChange} />);
+      rerender(<Picker data={sampleData} value="Cherry" loop onChange={onChange} />);
+      rerender(<Picker data={sampleData} value="Cherry" loop={false} onChange={onChange} />);
+
+      expect(container.querySelector('[role="listbox"]')).toBeTruthy();
+      expect(container).toHaveTextContent('Cherry');
+    });
+  });
+
+  describe('value change effect (#23)', () => {
+    it('renders correctly after a controlled value change', () => {
+      const { rerender, container } = render(
+        <Picker data={sampleData} value="Apple" animate={false} />
+      );
+      expect(container).toHaveTextContent('Apple');
+
+      rerender(<Picker data={sampleData} value="Date" animate={false} />);
+
+      expect(container).toHaveTextContent('Date');
+    });
+
+    it('reacts to value changes both with loop enabled and disabled', () => {
+      const { rerender, container } = render(
+        <Picker data={sampleData} value="Apple" loop animate={false} />
+      );
+      rerender(<Picker data={sampleData} value="Cherry" loop animate={false} />);
+      expect(container).toHaveTextContent('Cherry');
+
+      rerender(<Picker data={sampleData} value="Elderberry" loop={false} animate={false} />);
+      expect(container).toHaveTextContent('Elderberry');
+    });
+  });
 });
