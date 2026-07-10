@@ -95,7 +95,3 @@ Your help truly matters.
 
 ---
 https://github.com/user-attachments/assets/520e4838-9f2f-4714-9de2-8067c7630d1d
-
----  
-[![Star History Chart](https://api.star-history.com/svg?repos=gfazioli/mantine-picker&type=Timeline)](https://www.star-history.com/#gfazioli/mantine-picker&Timeline)
-
