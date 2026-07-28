@@ -241,6 +241,14 @@
   padding: 0;
   margin: -1px;
   overflow: hidden;
+
+  /* `clip` is formally deprecated in favour of `clip-path`, which stylelint 17's
+     `property-no-deprecated` rule reports — but this is the standard visually-hidden recipe and
+     Mantine core itself still ships `clip: rect(0 0 0 0)` in its own VisuallyHidden component as of
+     9.5 (class `.m_515a97f8` in @mantine/core/styles.css). Keeping the same declaration keeps this
+     consistent with the library we build on, and the property is still honoured everywhere.
+     Revisit when Mantine core moves to `clip-path`. */
+  /* stylelint-disable-next-line property-no-deprecated */
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
